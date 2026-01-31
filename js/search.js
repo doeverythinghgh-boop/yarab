@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const searchInput = document.getElementById("search-input");
     const searchBtn = document.getElementById("search-btn");
     const resultsContainer = document.getElementById("results-container");
@@ -223,6 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Call populate before restoring state
+    await initializeDefaultSettings();
     await populateFilterOptions();
     restoreStateAndSearch();
 });

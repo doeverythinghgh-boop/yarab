@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const topicSelector = document.getElementById("topic-selector");
     const contentArea = document.getElementById("content-area");
     const loadButton = document.getElementById("load-data-btn");
@@ -360,5 +360,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    await initializeDefaultSettings();
     initializePage();
 });

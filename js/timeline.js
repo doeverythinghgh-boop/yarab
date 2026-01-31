@@ -67,5 +67,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    await initializeDefaultSettings();
     renderTimeline();
 });

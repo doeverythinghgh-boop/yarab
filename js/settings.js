@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const addTopicBtn = document.getElementById("add-topic-btn");
 
     // Load initial data
+    await initializeDefaultSettings();
     await renderAll();
 
     // --- Rendering Functions ---

@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const dateSelector = document.getElementById("date-selector");
     const descriptionDisplay = document.getElementById("description-display");
     const loadButton = document.getElementById("load-data-btn");
@@ -691,7 +691,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    loadAndPopulateData();
+    await initializeDefaultSettings(); // Ensure settings exist
+    await loadAndPopulateData();
     checkAndRequestPersistence();
 
     saveButton.style.display = "none";
