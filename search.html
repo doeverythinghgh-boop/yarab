@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>صفحة البحث</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/search.css" />
+</head>
+
+<body>
+  <nav class="top-nav">
+    <a href="index.html" id="nav-back-to-main-btn" class="nav-button button">الرئيسية</a>
+    <a href="topics.html" class="nav-button button">الموضوعات</a>
+    <a href="search.html" class="nav-button button">بحث</a>
+  </nav>
+  <div class="container">
+    <h1>البحث في سجل الأحداث</h1>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label for="tag-filter">فلترة حسب قوة الملف:</label>
+        <select id="tag-filter">
+          <option value="">الكل</option>
+          <option value="اصلي">اصلي</option>
+          <option value="خطر">خطر</option>
+          <option value="لا يمكن تجاهله">لا يمكن تجاهله</option>
+          <option value="تم تقديمة">تم تقديمة</option>
+          <option value="">لا اعرف</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="condemnation-filter">فلترة حسب الإدانة:</label>
+        <select id="condemnation-filter">
+          <option value="">الكل</option>
+          <option value="مدير عام مساعد الصيانة">
+            مدير عام مساعد الصيانة
+          </option>
+          <option value="مدير عام">مدير عام</option>
+          <option value="مدير عام و مساعد">مدير عام و مساعد</option>
+          <option value="مدير عام مساعد+مقاول">مدير عام مساعد+مقاول</option>
+          <option value="مدير عام+مساعد+مقاول">مدير عام+مساعد+مقاول</option>
+          <option value="مقاول">مقاول</option>
+          <option value="لي">لي</option>
+          <option value="لصالحي">لصالحي</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="ابحث في الوصف، التاريخ، أو أي تفاصيل أخرى..." />
+      <button id="search-btn" class="button">بحث</button>
+    </div>
+
+    <div id="results-info"></div>
+    <div id="results-container">
+      <p style="padding: 15px">سيتم عرض نتائج البحث هنا.</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/db.js"></script>
+  <script src="js/search.js"></script>
+</body>
+
+</html>

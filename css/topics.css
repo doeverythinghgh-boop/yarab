@@ -1,0 +1,67 @@
+/* تنسيقات خاصة بصفحة الموضوعات */
+
+textarea {
+    width: 100%;
+    min-height: 300px;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccd0d5;
+    font-size: 1em;
+    box-sizing: border-box;
+    resize: vertical;
+    margin-top: 15px;
+    line-height: 1.6;
+}
+
+/* حاوية المحرر الجديدة */
+.editor-wrapper {
+    position: relative;
+    margin-top: 15px;
+    width: 100%;
+    min-height: 300px;
+    font-size: 1em;
+    line-height: 1.6;
+}
+
+.editor-wrapper>textarea,
+.editor-wrapper>#highlighter {
+    margin: 0;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccd0d5;
+    font: inherit;
+    letter-spacing: inherit;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 300px;
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    resize: none;
+    /* يتم التحكم به من خلال textarea */
+}
+
+.editor-wrapper>textarea {
+    z-index: 1;
+    background-color: transparent;
+    color: #1c1e21;
+    /* لون نص واضح للكتابة */
+    pointer-events: none;
+    /* السماح للنقرات بالمرور إلى الطبقة السفلية بشكل افتراضي */
+}
+
+.editor-wrapper>#highlighter {
+    z-index: 0;
+    color: transparent;
+    /* النص الأساسي يكون شفافًا */
+}
+
+.editor-wrapper #highlighter .date-highlight {
+    background-color: #fffbdd;
+    /* لون تمييز التاريخ - أصفر فاتح */
+    color: inherit;
+    /* استخدام لون النص الأصلي */
+    border-radius: 3px;
+}

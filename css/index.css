@@ -1,0 +1,122 @@
+/* تنسيقات خاصة بصفحة الرئيسية */
+
+.description-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+textarea {
+    resize: vertical;
+    background-color: #ffffff;
+    line-height: 1.6;
+    font-size: clamp(1em, 1.5vw, 1.1em);
+    flex-grow: 1;
+    margin-bottom: 15px;
+    min-height: 250px;
+}
+
+.meta-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.meta-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.meta-field {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* الأزرار الخاصة */
+#save-changes-btn {
+    background-color: #28a745;
+    display: none;
+}
+
+#save-changes-btn:hover {
+    background-color: #218838;
+}
+
+#add-new-event-btn {
+    background-color: #17a2b8;
+}
+
+#add-new-event-btn:hover {
+    background-color: #138496;
+}
+
+.button {
+    flex-grow: 1;
+    /* مشاركة المساحة بالتساوي في مجموعة الأزرار */
+}
+
+/* روابط الملفات */
+.link-input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.link-input-group button.active {
+    background-color: #0056b3;
+    color: white;
+}
+
+#file-links-container {
+    margin-bottom: 10px;
+}
+
+/* أزرار النسخ والعناوين */
+.label-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 8px;
+    gap: 15px;
+}
+
+.label-container label {
+    margin-bottom: 0;
+}
+
+.copy-btn {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    padding: 3px 8px;
+    font-size: 0.8em;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.copy-btn:hover {
+    background-color: #dee2e6;
+}
+
+/* عارض الملفات */
+#file-viewer {
+    display: none;
+    width: 100%;
+    height: 500px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+/* Media Query */
+@media (max-width: 600px) {
+    .meta-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+}

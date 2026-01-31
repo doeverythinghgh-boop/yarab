@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>عرض سجل الأحداث</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/index.css" />
+</head>
+
+<body>
+  <nav class="top-nav">
+    <a href="index.html" class="nav-button button">الرئيسية</a>
+    <a href="topics.html" class="nav-button button">الموضوعات</a>
+    <a href="search.html" id="nav-search-btn" class="nav-button button">بحث</a>
+  </nav>
+  <div class="container">
+    <h1>سجل الأحداث</h1>
+    <p id="save-status"></p>
+
+    <div class="button-group">
+      <button id="load-data-btn" class="button">تحميل و حفظ</button>
+      <button id="add-new-event-btn" class="button">حدث جديد</button>
+      <button id="export-data-btn" class="button">تصدير</button>
+      <button id="save-changes-btn" class="button">حفظ التعديلات</button>
+    </div>
+
+    <div id="date-selection-area">
+      <div>
+        <div class="label-container">
+          <label for="date-selector">اختر تاريخًا:</label>
+          <button id="copy-date-btn" class="copy-btn">نسخ التاريخ</button>
+        </div>
+        <select id="date-selector">
+          <option value="">-- يرجى اختيار تاريخ لعرض الوصف --</option>
+        </select>
+      </div>
+
+      <div id="new-date-entry" style="display: none; margin-bottom: 20px">
+        <label for="new-date-input">أدخل التاريخ الجديد:</label>
+        <input type="date" id="new-date-input" />
+      </div>
+    </div>
+
+    <div class="description-wrapper">
+      <div class="label-container">
+        <label for="description-display">الوصف:</label>
+        <button id="paste-description-btn" class="copy-btn">لصق</button>
+        <button id="copy-description-btn" class="copy-btn">نسخ</button>
+      </div>
+      <textarea id="description-display" placeholder="سيظهر الوصف هنا..."></textarea>
+      <div class="meta-container">
+        <div class="meta-row">
+          <div class="meta-field">
+            <label for="tag-selector">قوه الملف:</label>
+            <select id="tag-selector">
+              <option value="">لا اعرف</option>
+              <option value="اصلي">اصلي</option>
+              <option value="خطر">خطر</option>
+              <option value="لا يمكن تجاهله">لا يمكن تجاهله</option>
+              <option value="تم تقديمة">تم تقديمة</option>
+            </select>
+          </div>
+          <div class="meta-field">
+            <label for="condemnation-selector">ادانه:</label>
+            <select id="condemnation-selector">
+              <option value="">-- اختر --</option>
+              <option value="مدير عام مساعد الصيانة">
+                مدير عام مساعد الصيانة
+              </option>
+              <option value="مدير عام">مدير عام</option>
+              <option value="مدير عام و مساعد">مدير عام و مساعد</option>
+              <option value="مدير عام مساعد+مقاول">
+                مدير عام مساعد+مقاول
+              </option>
+              <option value="مدير عام+مساعد+مقاول">
+                مدير عام+مساعد+مقاول
+              </option>
+
+              <option value="مقاول">مقاول</option>
+              <option value="لي">لي</option>
+              <option value="لصالحي">لصالحي</option>
+            </select>
+          </div>
+        </div>
+        <div id="condemnation-details-wrapper" style="display: none; margin-bottom: 10px">
+          <label for="condemnation-description">وصف الإدانة:</label>
+          <textarea id="condemnation-description" rows="3" placeholder="أدخل تفاصيل الإدانة هنا..."></textarea>
+        </div>
+        <div class="meta-row">
+          <div class="meta-field" style="flex-grow: 2">
+            <label>روابط الملفات:</label>
+            <div id="file-links-container">
+              <!-- Dynamic link inputs will be added here -->
+            </div>
+            <button type="button" id="add-link-btn" class="button" style="
+                  margin-top: 10px;
+                  flex-grow: 0;
+                  padding: 5px 10px;
+                  font-size: 0.9em;
+                ">
+              إضافة رابط
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <iframe id="file-viewer" src="about:blank" style="
+          display: none;
+          width: 100%;
+          height: 500px;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          margin-bottom: 20px;
+        "></iframe>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/index.js"></script>
+</body>
+
+</html>

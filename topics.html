@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>صفحة الموضوعات</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/topics.css" />
+</head>
+
+<body>
+  <nav class="top-nav">
+    <a href="index.html" class="nav-button button">الرئيسية</a>
+    <a href="topics.html" class="nav-button button">الموضوعات</a>
+    <a href="search.html" class="nav-button button">بحث</a>
+  </nav>
+  <div class="container">
+    <h1>الموضوعات</h1>
+    <p id="save-status"></p>
+
+    <div class="button-group">
+      <button id="load-data-btn" class="button">تحميل و حفظ</button>
+      <button id="export-data-btn" class="button">تصدير</button>
+    </div>
+
+    <div>
+      <label for="topic-selector">اختر موضوعًا:</label>
+      <select id="topic-selector">
+        <!-- سيتم ملء الخيارات بواسطة جافاسكريبت -->
+      </select>
+    </div>
+    <div id="content-area">
+      <!-- سيتم عرض منطقة الكتابة هنا -->
+    </div>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/topics.js"></script>
+</body>
+
+</html>
