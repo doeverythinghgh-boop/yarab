@@ -7,6 +7,7 @@
   <title>عرض سجل الأحداث</title>
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/index.css" />
+  <link rel="manifest" href="manifest.json" />
 </head>
 
 <body>
@@ -55,32 +56,13 @@
           <div class="meta-field">
             <label for="tag-selector">قوه الملف:</label>
             <select id="tag-selector">
-              <option value="">لا اعرف</option>
-              <option value="اصلي">اصلي</option>
-              <option value="خطر">خطر</option>
-              <option value="لا يمكن تجاهله">لا يمكن تجاهله</option>
-              <option value="تم تقديمة">تم تقديمة</option>
+              <option value="">-- اختر --</option>
             </select>
           </div>
           <div class="meta-field">
             <label for="condemnation-selector">ادانه:</label>
             <select id="condemnation-selector">
               <option value="">-- اختر --</option>
-              <option value="مدير عام مساعد الصيانة">
-                مدير عام مساعد الصيانة
-              </option>
-              <option value="مدير عام">مدير عام</option>
-              <option value="مدير عام و مساعد">مدير عام و مساعد</option>
-              <option value="مدير عام مساعد+مقاول">
-                مدير عام مساعد+مقاول
-              </option>
-              <option value="مدير عام+مساعد+مقاول">
-                مدير عام+مساعد+مقاول
-              </option>
-
-              <option value="مقاول">مقاول</option>
-              <option value="لي">لي</option>
-              <option value="لصالحي">لصالحي</option>
             </select>
           </div>
         </div>
@@ -119,6 +101,7 @@
 
   <script src="js/db.js"></script>
   <script src="js/index.js"></script>
+  <script src="js/pwa-loader.js"></script>
 </body>
 
 </html>

@@ -12,17 +12,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentStoreName = topicsStoreName;
     let autoSaveTimer = null;
 
-    // قائمة الموضوعات مع معرفات فريدة
-    const topicsList = [
-        { id: "1", name: "مسؤوليه المهندس المشرف" },
-        { id: "2", name: "الحيادية والعدل" },
-        { id: "3", name: "محضر تسليم موقع" },
-        { id: "4", name: "الكيد لي لالحاق الضرر" },
-        { id: "5", name: "اخفاء مستندات" },
-        { id: "6", name: "موضوع عام" },
-    ];
+    // List is now fetched from DB settings
 
     // OpenDB imported from db.js
+
+    async function getTopicsList() {
+        return await getSetting("topicsList"); // defined in db.js
+    }
 
     async function getTopicContent(topicId) {
         const db = await openDB();
@@ -308,12 +304,16 @@ document.addEventListener("DOMContentLoaded", () => {
         topicSelector.innerHTML =
             '<option value="">-- اختر موضوعًا --</option>';
 
-        topicsList.forEach((topic) => {
-            const option = document.createElement("option");
-            option.value = topic.id;
-            option.textContent = topic.name;
-            topicSelector.appendChild(option);
-        });
+        const topicsList = await getTopicsList(); // Fetch from DB
+
+        if (topicsList) {
+            topicsList.forEach((topic) => {
+                const option = document.createElement("option");
+                option.value = topic.id;
+                option.textContent = topic.name;
+                topicSelector.appendChild(option);
+            });
+        }
 
         await initializeEmptyData();
 
@@ -343,12 +343,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return new Promise((resolve) => {
             countRequest.onsuccess = async () => {
                 if (countRequest.result === 0) {
-                    const initialData = topicsList.map((topic) => ({
-                        id: topic.id,
-                        content: "",
-                    }));
-                    await importData(initialData);
-                    console.log("تم تهيئة قاعدة بيانات الموضوعات ببيانات فارغة.");
+                    const topicsList = await getTopicsList(); // Get list to seed empty content
+                    if (topicsList) {
+                        const initialData = topicsList.map((topic) => ({
+                            id: topic.id,
+                            content: "",
+                        }));
+                        await importData(initialData);
+                        console.log("تم تهيئة قاعدة بيانات الموضوعات ببيانات فارغة.");
+                    }
                     resolve();
                 } else {
                     resolve();

@@ -198,5 +198,31 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    async function populateFilterOptions() {
+        const tags = await getSetting("tags");
+        tagFilter.innerHTML = '<option value="">الكل</option>';
+        if (tags) {
+            tags.forEach(tag => {
+                const opt = document.createElement("option");
+                opt.value = tag;
+                opt.textContent = tag;
+                tagFilter.appendChild(opt);
+            });
+        }
+
+        const condemnations = await getSetting("condemnations");
+        condemnationFilter.innerHTML = '<option value="">الكل</option>';
+        if (condemnations) {
+            condemnations.forEach(c => {
+                const opt = document.createElement("option");
+                opt.value = c;
+                opt.textContent = c;
+                condemnationFilter.appendChild(opt);
+            });
+        }
+    }
+
+    // Call populate before restoring state
+    await populateFilterOptions();
     restoreStateAndSearch();
 });

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>الخط الزمني للأحداث</title>
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/timeline.css" />
+    <link rel="manifest" href="manifest.json" />
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="index.html" class="nav-button button">الرئيسية</a>
+        <a href="topics.html" class="nav-button button">الموضوعات</a>
+        <a href="search.html" class="nav-button button">بحث</a>
+        <a href="timeline.html" class="nav-button button active">الخط الزمني</a>
+        <a href="settings.html" class="nav-button button">الإعدادات</a>
+    </nav>
+
+    <div class="container">
+        <h1>الخط الزمني للأحداث</h1>
+        <div class="timeline-container" id="timeline-container">
+            <!-- سيتم بناء الخط الزمني هنا بواسطة JS -->
+            <p class="loading-text">جاري تحميل الأحداث...</p>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/timeline.js"></script>
+    <script src="js/pwa-loader.js"></script>
+</body>
+
+</html>

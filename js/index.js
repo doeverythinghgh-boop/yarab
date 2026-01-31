@@ -435,10 +435,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
             populateDropdown(eventsData);
+            await populateMetadataSelectors(); // Populate dynamic lists
         } catch (error) {
             console.error("Could not fetch events data:", error);
             descriptionDisplay.value =
                 "فشل في تحميل البيانات. حاول تحميلها من الملف أولاً.";
+        }
+    }
+
+    async function populateMetadataSelectors() {
+        // Populate Tags
+        const tags = await getSetting("tags");
+        tagSelector.innerHTML = '<option value="">-- اختر --</option>';
+        if (tags && tags.length > 0) {
+            tags.forEach(tag => {
+                const option = document.createElement("option");
+                option.value = tag;
+                option.textContent = tag;
+                tagSelector.appendChild(option);
+            });
+        }
+
+        // Populate Condemnations
+        const condemnations = await getSetting("condemnations");
+        condemnationSelector.innerHTML = '<option value="">-- اختر --</option>';
+        if (condemnations && condemnations.length > 0) {
+            condemnations.forEach(c => {
+                const option = document.createElement("option");
+                option.value = c;
+                option.textContent = c;
+                condemnationSelector.appendChild(option);
+            });
         }
     }
 

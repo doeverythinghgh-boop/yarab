@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>الإعدادات</title>
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/settings.css" />
+    <link rel="manifest" href="manifest.json" />
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="index.html" class="nav-button button">الرئيسية</a>
+        <a href="topics.html" class="nav-button button">الموضوعات</a>
+        <a href="search.html" class="nav-button button">بحث</a>
+        <a href="settings.html" class="nav-button button active">الإعدادات</a>
+    </nav>
+
+    <div class="container">
+        <h1>إعدادات القوائم</h1>
+        <p class="subtitle">قم بتخصيص الخيارات المتاحة في التطبيق</p>
+        <p id="save-status"></p>
+
+        <div class="settings-grid">
+            <!-- بطاقة قوة الملف -->
+            <div class="card">
+                <h2>قوة الملف (Tags)</h2>
+                <ul id="tags-list" class="items-list">
+                    <!-- سيتم الملء بواسطة JS -->
+                </ul>
+                <div class="add-item-form">
+                    <input type="text" id="new-tag-input" placeholder="إضافة تصنيف جديد..." />
+                    <button id="add-tag-btn" class="button small">إضافة</button>
+                </div>
+            </div>
+
+            <!-- بطاقة الإدانة -->
+            <div class="card">
+                <h2>جهات الإدانة</h2>
+                <ul id="condemnations-list" class="items-list">
+                    <!-- سيتم الملء بواسطة JS -->
+                </ul>
+                <div class="add-item-form">
+                    <input type="text" id="new-condemnation-input" placeholder="إضافة جهة إدانة..." />
+                    <button id="add-condemnation-btn" class="button small">إضافة</button>
+                </div>
+            </div>
+
+            <!-- بطاقة الموضوعات -->
+            <div class="card">
+                <h2>الموضوعات</h2>
+                <ul id="topics-list" class="items-list">
+                    <!-- سيتم الملء بواسطة JS -->
+                </ul>
+                <div class="add-item-form">
+                    <input type="text" id="new-topic-input" placeholder="إضافة موضوع جديد..." />
+                    <button id="add-topic-btn" class="button small">إضافة</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/pwa-loader.js"></script>
+</body>
+
+</html>
