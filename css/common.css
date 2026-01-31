@@ -4,7 +4,8 @@ body {
   background-color: #f0f2f5;
   color: #1c1e21;
   margin: 0;
-  padding-top: 60px; /* لإعطاء مساحة لشريط التنقل الثابت */
+  padding-top: 60px;
+  /* لإعطاء مساحة لشريط التنقل الثابت */
 }
 
 .container {
@@ -77,34 +78,164 @@ input[type="date"]:focus {
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s;
-  text-decoration: none; /* للروابط التي تشبه الأزرار */
-  display: inline-block; /* للروابط */
+  text-decoration: none;
+  /* للروابط التي تشبه الأزرار */
+  display: inline-block;
+  /* للروابط */
 }
 
 .button:hover {
   background-color: #004494;
 }
 
+.icon-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  position: relative;
+}
+
+.icon-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+/* Tooltip for icon buttons */
+.icon-btn::after {
+  content: attr(title);
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.icon-btn:hover::after {
+  opacity: 1;
+  visibility: visible;
+  top: -45px;
+}
+
+.icon-btn.small {
+  width: 35px;
+  height: 35px;
+  border-radius: 8px !important;
+}
+
+.icon-btn.small svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* شريط التنقل العلوي */
 .top-nav {
-  background-color: #343a40;
-  padding: 10px 0;
+  background-color: rgba(52, 58, 64, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 8px 0;
   text-align: center;
   position: fixed;
   top: 0;
   right: 0;
   left: 0;
   z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
 }
 
-.top-nav a.nav-button {
+.nav-button {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background: transparent;
+}
+
+.nav-button svg {
+  width: 24px;
+  height: 24px;
+  fill: #adb5bd;
+  transition: fill 0.3s;
+}
+
+.nav-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.nav-button:hover svg {
+  fill: #ffffff;
+}
+
+.nav-button.active {
+  background-color: #007bff;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.nav-button.active svg {
+  fill: #ffffff;
+}
+
+/* Tooltip (إظهار اسم الصفحة عند الحوم بالماوس) */
+.nav-button::after {
+  content: attr(title);
+  position: absolute;
+  top: 55px;
+  background: #333;
   color: white;
-  padding: 8px 20px;
-  border-radius: 5px;
-  text-decoration: none;
-  margin: 0 10px;
-  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.nav-button:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* التجاوب مع مختلف الشاشات */
+@media screen and (max-width: 480px) {
+  .top-nav {
+    gap: 8px;
+    padding: 10px 0;
+  }
+
+  .nav-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .nav-button svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* رسالة حالة الحفظ */

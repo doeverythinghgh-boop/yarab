@@ -1,4 +1,4 @@
-const CACHE_NAME = "events-app-v2";
+const CACHE_NAME = "events-app-v4";
 const ASSETS_TO_CACHE = [
     "./",
     "./index.html",
@@ -23,6 +23,7 @@ const ASSETS_TO_CACHE = [
 
 // Install Event
 self.addEventListener("install", (event) => {
+    self.skipWaiting(); // إجبار التحديث فوراً
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             console.log("[Service Worker] Caching all assets");

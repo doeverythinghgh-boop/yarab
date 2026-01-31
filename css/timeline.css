@@ -96,11 +96,11 @@
 .left::after {
     left: -10px;
     right: auto;
+}
 
-    .right::after {
-        right: -10px;
-        left: auto;
-    }
+.right::after {
+    right: -10px;
+    left: auto;
 }
 
 
