@@ -256,12 +256,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     exportButton.addEventListener("click", async () => {
         try {
-            console.log("%c[تحديث السحابة] بدء رفع الموضوعات إلى GitHub Gist...", "color: #28a745; font-weight: bold; font-size: 1.1em;");
+            console.log("%c🚀 [نظام المزامنة] بدء تصدير الموضوعات سحابياً الآن...", "color: #28a745; font-weight: bold; font-size: 1.2em;");
 
             const githubToken = await getSetting("github_token");
             const gistId = await getSetting("gist_id");
 
-            console.log("[خطوة 1] استخراج المواضيع من قاعدة البيانات المحلية...");
+            console.log("🔍 [فحص الإعدادات] جاري التأكد من التوكن والمعرف للموضوعات...");
+            if (!githubToken) console.warn("⚠️ [تنبيه] لم يتم ضبط التوكن. سيتم التحويل للتحميل المحلي.");
+
+            console.log("📂 [قاعدة البيانات] جاري جلب المواضيع من IndexedDB...");
             const db = await openDB();
             const tx = db.transaction(topicsStoreName, "readonly");
             const store = tx.objectStore(topicsStoreName);
@@ -269,12 +272,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             request.onsuccess = async () => {
                 const allData = request.result;
-                console.log(`[خطوة 2] تم تجهيز ${allData.length} موضوع. تحويل البيانات لصيغة JSON...`);
+                console.log(`📦 [تجهيز] تم استخراج (${allData.length}) موضوع. جاري التجهيز...`);
                 const jsonContent = JSON.stringify(allData, null, 2);
 
                 if (githubToken && gistId) {
-                    console.log(`[خطوة 3] جاري الاتصال بـ GitHub API لتحديث الملف: topics_data.json`);
-                    console.log("%c[جاري الإرسال...] يرجى الانتظار ثواني...", "color: #ffc107;");
+                    console.log("%c📡 [اتصال] جاري تحديث ملف topics_data.json على GitHub... انتظر قليلاً.", "color: #007bff;");
 
                     const response = await fetch(`https://api.github.com/gists/${gistId}`, {
                         method: "PATCH",
@@ -290,15 +292,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                     });
 
                     if (response.ok) {
-                        console.log("%c[نجاح] تمت عملية الرفع بنجاح! السحابة الآن محدثة بمواضيعك.", "color: #28a745; font-weight: bold;");
+                        console.log("%c✅ [نجاح] تم تحديث الموضوعات سحابياً بنجاح تام!", "color: #28a745; font-weight: bold; padding: 4px; border: 1px solid;");
                         alert("✅ تم تحديث الموضوعات على GitHub Gist بنجاح!");
                         return;
                     } else {
-                        console.error(`[فشل] لم ينجح الرفع السحابي. الحالة: ${response.status}`);
+                        console.error(`❌ [فشل الرفع] حدث خطأ في استجابة GitHub. الحالة: ${response.status}`);
+                        console.log("💡 [نصيحة] إذا كان الخطأ 401، فهذا يعني أن التوكن انتهت صلاحيته أو غير صحيح.");
                     }
                 }
 
-                console.log("[إجراء احتياطي] تحميل البيانات كملف محلي.");
+                console.log("💾 [إجراء احتياطي] جاري بدء التحميل المحلي لملف المواضيع...");
                 const blob = new Blob([jsonContent], { type: "application/json" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -308,10 +311,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                console.log("🏁 [نهاية] تم تحميل ملف الموضوعات محلياً.");
                 alert("تم تحميل ملف الموضوعات محلياً.");
             };
         } catch (err) {
-            console.error("[خطأ في التصدير]:", err);
+            console.error("⛔ [خطأ فني] تعطلت عملية تصدير المواضيع:", err);
             alert("حدث خطأ أثناء التصدير.");
         }
     });

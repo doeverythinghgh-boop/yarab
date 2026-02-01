@@ -97,6 +97,34 @@
                     </button>
                 </div>
             </div>
+
+            <!-- بطاقة إعدادات المزامنة السحابية -->
+            <div id="card-github-config" class="card">
+                <h2 id="card-github-title">إعدادات GitHub Gist</h2>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 20px;">قم بضبط إعدادات المزامنة لرفع وتحميل
+                    البيانات
+                    سحابياً.</p>
+
+                <div class="meta-field" style="margin-bottom: 20px;">
+                    <label for="github-token" style="display: block; margin-bottom: 8px;">GitHub Personal Token:</label>
+                    <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx"
+                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;" />
+                </div>
+
+                <div class="meta-field" style="margin-bottom: 20px;">
+                    <label for="gist-id" style="display: block; margin-bottom: 8px;">Gist ID:</label>
+                    <input type="text" id="gist-id" placeholder="03224b07410b79be95dca..."
+                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;" />
+                </div>
+
+                <button id="save-gist-config-btn" class="button icon-btn" style="width: 100%; justify-content: center;">
+                    <svg viewBox="0 0 24 24" style="width: 20px; margin-left: 8px;">
+                        <path
+                            d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                    </svg>
+                    حفظ إعدادات المزامنة
+                </button>
+            </div>
         </div>
     </div>
 

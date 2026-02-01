@@ -227,26 +227,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     exportButton?.addEventListener("click", async () => {
         try {
-            console.log("%c[تحديث السحابة] بدء رفع سجل الأحداث إلى GitHub Gist...", "color: #28a745; font-weight: bold; font-size: 1.1em;");
+            console.log("%c🚀 [نظام المزامنة] بدأت عملية التصدير السحابي للحدث الآن...", "color: #28a745; font-weight: bold; font-size: 1.2em;");
 
             const githubToken = await getSetting("github_token");
             const gistId = await getSetting("gist_id");
 
-            console.log("[خطوة 1] جلب البيانات الحالية من قاعدة البيانات المحلية (IndexedDB)...");
+            console.log("🔍 [فحص الإعدادات] جاري التأكد من وجود مفتاح الوصول والمعرف...");
+            if (!githubToken) console.warn("⚠️ [تنبيه] لم يتم العثور على GitHub Token. سيتم التحويل للتحميل المحلي.");
+            if (!gistId) console.warn("⚠️ [تنبيه] لم يتم العثور على Gist ID.");
+
+            console.log("📂 [قاعدة البيانات] جاري استخراج السجلات من IndexedDB...");
             const dataFromDB = await readDataFromDB();
 
             if (!dataFromDB || dataFromDB.length === 0) {
-                console.warn("[تنبيه] قاعدة البيانات فارغة. لا يوجد شيء لرفعه.");
+                console.error("❌ [خطأ] قاعدة البيانات فارغة تماماً. لا يوجد بيانات لتصديرها.");
                 alert("لا توجد بيانات لتصديرها.");
                 return;
             }
 
-            console.log(`[خطوة 2] تم تجهيز ${dataFromDB.length} سجل. تحويل البيانات إلى صيغة JSON...`);
+            console.log(`📦 [تجهيز] تم العثور على (${dataFromDB.length}) سجل. جاري التحويل لصيغة JSON...`);
             const jsonContent = JSON.stringify(dataFromDB, null, 2);
 
             if (githubToken && gistId) {
-                console.log(`[خطوة 3] الاتصال بـ GitHub API لتحديث الملف: 111.json`);
-                console.log("%c[جاري الإرسال...] يرجى الانتظار ثواني...", "color: #ffc107;");
+                console.log("%c📡 [اتصال] جاري محاولة الرفع إلى GitHub API... يرجى الانتظار.", "color: #007bff;");
 
                 const response = await fetch(`https://api.github.com/gists/${gistId}`, {
                     method: "PATCH",
@@ -255,22 +258,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        files: {
-                            "111.json": { content: jsonContent }
-                        }
+                        files: { "111.json": { content: jsonContent } }
                     })
                 });
 
                 if (response.ok) {
-                    console.log("%c[نجاح] تمت عملية الرفع بنجاح! السحابة الآن محدثة بسجل الأحداث.", "color: #28a745; font-weight: bold;");
+                    console.log("%c✅ [نجاح] تمت المزامنة بنجاح! السحابة الآن مطابقة لجهازك.", "color: #28a745; font-weight: bold; padding: 4px; border: 1px solid;");
                     alert("✅ تم تحديث الملف على GitHub Gist بنجاح!");
                     return;
                 } else {
-                    console.error(`[فشل] رفض GitHub الطلب. المعرف أو التوكن قد يكون خاطئاً. الحالة: ${response.status}`);
+                    console.error(`❌ [فشل سحابي] رفض GitHub الطلب. كود الحالة: ${response.status}`);
+                    console.log("💡 [نصيحة للمطور] تأكد من أن الـ Token صحيح ولديه صلاحية (Gist Scope).");
                 }
             }
 
-            console.log("[إجراء احتياطي] سيتم تحميل الملف محلياً كنسخة احتياطية.");
+            console.log("💾 [إجراء احتياطي] جاري بدء التحميل المحلي للملف (111.json)...");
             const blob = new Blob([jsonContent], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
@@ -280,10 +282,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            console.log("🏁 [نهاية] تم تحميل الملف محلياً.");
             alert("تم تحميل الملف محلياً (إما لفشل الرفع أو لعدم ضبط الإعدادات).");
-
         } catch (error) {
-            console.error("[خطأ فادح أثناء الرفع]:", error);
+            console.error("⛔ [خطأ فادح] تعطلت عملية التصدير:", error);
             alert("فشل تصدير البيانات.");
         }
     });
