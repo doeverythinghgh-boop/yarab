@@ -485,12 +485,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 eventsData = dbData;
                 console.log(`[بيانات] تم العثور على ${eventsData.length} حدث.`);
             } else {
-                console.warn("[تنبيه] قاعدة البيانات فارغة، محاولة التحميل من ملف 111.json...");
-                const response = await fetch("./111.json");
-                if (!response.ok) throw new Error("الملف الافتراضي غير موجود");
-                const fileData = await response.json();
-                await saveDataToDB(fileData);
-                eventsData = await readDataFromDB(true);
+                console.log("%c[تنبيه] قاعدة البيانات فارغة تماماً.", "color: #ffc107;");
+                descriptionDisplay.value = "لا توجد بيانات محلية. يرجى الضغط على زر 'تحميل من الويب' لمزامنة سجل الأحداث.";
             }
 
             populateDropdown(eventsData);
