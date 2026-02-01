@@ -1,12 +1,12 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const dateSelector = document.getElementById("date-selector");
     const descriptionDisplay = document.getElementById("description-display");
-    const loadButton = document.getElementById("load-data-btn");
+    const loadButton = document.getElementById("load-events-btn");
     const tagSelector = document.getElementById("tag-selector");
     const condemnationSelector = document.getElementById("condemnation-selector");
     const addNewEventBtn = document.getElementById("add-new-event-btn");
     const fileViewer = document.getElementById("file-viewer");
-    const exportButton = document.getElementById("export-data-btn");
+    const exportButton = document.getElementById("export-events-btn");
     const saveButton = document.getElementById("save-changes-btn");
     const fileLinksContainer = document.getElementById("file-links-container");
     const addLinkBtn = document.getElementById("add-link-btn");
@@ -14,12 +14,38 @@ document.addEventListener("DOMContentLoaded", async () => {
     // We used a helper in db.js but here there is local logic too.
     // The local `showSaveStatus` overrides or works similarly.
     const saveStatus = document.getElementById("save-status");
-    let eventsData = [];
-    const condemnationDetailsWrapper = document.getElementById("condemnation-details-wrapper");
-    const condemnationDescription = document.getElementById("condemnation-description");
     const copyDescriptionBtn = document.getElementById("copy-description-btn");
     const pasteDescriptionBtn = document.getElementById("paste-description-btn");
     const navSearchBtn = document.getElementById("nav-search-btn");
+
+    // --- فحص وجود العناصر الأساسية لمنع الأخطاء ---
+    const requiredElements = {
+        "date-selector": dateSelector,
+        "description-display": descriptionDisplay,
+        "load-events-btn": loadButton,
+        "tag-selector": tagSelector,
+        "condemnation-selector": condemnationSelector,
+        "add-new-event-btn": addNewEventBtn,
+        "export-events-btn": exportButton,
+        "save-changes-btn": saveButton,
+        "nav-search-btn": navSearchBtn
+    };
+
+    Object.entries(requiredElements).forEach(([id, el]) => {
+        if (!el) console.error(`[خطأ فني] العنصر ذو المعرف (ID: ${id}) غير موجود في الصفحة!`);
+    });
+
+    if (!loadButton || !exportButton || !saveButton) {
+        console.warn("[تنبيه] بعض الأزرار الأساسية مفقودة، قد لا تعمل بعض الميزات بشكل صحيح.");
+    }
+    let eventsData = [];
+
+    // --- ضمان تهيئة الإعدادات والمعرفات عند بدء التشغيل ---
+    await initializeDefaultSettings();
+
+    const condemnationDetailsWrapper = document.getElementById("condemnation-details-wrapper");
+    const condemnationDescription = document.getElementById("condemnation-description");
+
     // const dbName = "EventsDB"; // Defined in db.js
     const dateSelectionArea = document.getElementById("date-selection-area");
     const dateSelectorDiv = dateSelector.parentElement;
@@ -157,71 +183,112 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // --- Event Listeners ---
 
-    loadButton.addEventListener("click", async () => {
+    loadButton?.addEventListener("click", async () => {
         try {
-            const response = await fetch("./111.json");
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const fileData = await response.json();
-            await saveDataToDB(fileData);
-            await loadAndPopulateData();
-            alert("تم التحديث بنجاح من الملف.");
-        } catch (error) {
-            console.error("Error loading or saving data:", error);
-            alert("فشل تحميل أو حفظ البيانات.");
-        }
-    });
-
-    exportButton.addEventListener("click", async () => {
-        try {
-            const dataFromDB = await readDataFromDB();
-            if (!dataFromDB || dataFromDB.length === 0) {
-                alert("لا توجد بيانات في قاعدة البيانات لتصديرها.");
+            const gistId = await getSetting("gist_id");
+            if (!gistId) {
+                console.error("[سجل الأحداث] خطأ: المعرف Gist ID غير مضبوط.");
+                alert("يرجى ضبط Gist ID في صفحة الإعدادات أولاً.");
                 return;
             }
 
-            const jsonString = JSON.stringify(dataFromDB, null, 2);
-            const blob = new Blob([jsonString], { type: "application/json" });
+            console.log(`%c[خطوة 1] بدء الجلب من GitHub API للـ Gist: ${gistId}`, "color: #007bff; font-weight: bold;");
+            const response = await fetch(`https://api.github.com/gists/${gistId}`);
 
-            if (window.showSaveFilePicker) {
-                try {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: "111.json",
-                        types: [
-                            {
-                                description: "JSON Files",
-                                accept: { "application/json": [".json"] },
-                            },
-                        ],
-                    });
-                    const writable = await handle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    alert("تم حفظ الملف بنجاح.");
-                } catch (err) {
-                    if (err.name !== "AbortError") {
-                        console.error("Error saving file:", err);
-                        alert("فشل حفظ الملف.");
-                    }
-                }
-            } else {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "111.json";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+            if (!response.ok) {
+                console.error(`[خطأ] فشل الاتصال بخوادم GitHub. الحالة: ${response.status}`);
+                throw new Error(`فشل جلب البيانات من GitHub. الحالة: ${response.status}`);
             }
+
+            console.log("[خطوة 2] تم استلام البيانات من السحابة. فحص محتوى الملف 111.json...");
+            const gistData = await response.json();
+            const file = gistData.files["111.json"];
+
+            if (!file) {
+                console.warn("[تحذير] لم يتم العثور على ملف 111.json داخل الـ Gist.");
+                throw new Error("الملف 111.json غير موجود في هذا الـ Gist.");
+            }
+
+            console.log("[خطوة 3] جاري تحليل نص JSON وتجهيزه للتخزين المحلي...");
+            const fileData = JSON.parse(file.content);
+
+            await saveDataToDB(fileData);
+            console.log("[خطوة 4] تم حفظ البيانات في IndexedDB بنجاح.");
+
+            await loadAndPopulateData();
+            console.log("[نجاح] تمت مزامنة واجهة المستخدم مع البيانات الجديدة.");
+
+            alert("تم جلب وتحديث البيانات بنجاح من GitHub Gist.");
         } catch (error) {
-            console.error("Error exporting data:", error);
-            alert("فشل تصدير البيانات من IndexedDB.");
+            console.error("[فشل المزامنة]:", error.message);
+            alert(`خطأ: ${error.message}`);
         }
     });
 
-    addNewEventBtn.addEventListener("click", () => {
+    exportButton?.addEventListener("click", async () => {
+        try {
+            console.log("%c[تحديث السحابة] بدء رفع سجل الأحداث إلى GitHub Gist...", "color: #28a745; font-weight: bold; font-size: 1.1em;");
+
+            const githubToken = await getSetting("github_token");
+            const gistId = await getSetting("gist_id");
+
+            console.log("[خطوة 1] جلب البيانات الحالية من قاعدة البيانات المحلية (IndexedDB)...");
+            const dataFromDB = await readDataFromDB();
+
+            if (!dataFromDB || dataFromDB.length === 0) {
+                console.warn("[تنبيه] قاعدة البيانات فارغة. لا يوجد شيء لرفعه.");
+                alert("لا توجد بيانات لتصديرها.");
+                return;
+            }
+
+            console.log(`[خطوة 2] تم تجهيز ${dataFromDB.length} سجل. تحويل البيانات إلى صيغة JSON...`);
+            const jsonContent = JSON.stringify(dataFromDB, null, 2);
+
+            if (githubToken && gistId) {
+                console.log(`[خطوة 3] الاتصال بـ GitHub API لتحديث الملف: 111.json`);
+                console.log("%c[جاري الإرسال...] يرجى الانتظار ثواني...", "color: #ffc107;");
+
+                const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Authorization": `token ${githubToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        files: {
+                            "111.json": { content: jsonContent }
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    console.log("%c[نجاح] تمت عملية الرفع بنجاح! السحابة الآن محدثة بسجل الأحداث.", "color: #28a745; font-weight: bold;");
+                    alert("✅ تم تحديث الملف على GitHub Gist بنجاح!");
+                    return;
+                } else {
+                    console.error(`[فشل] رفض GitHub الطلب. المعرف أو التوكن قد يكون خاطئاً. الحالة: ${response.status}`);
+                }
+            }
+
+            console.log("[إجراء احتياطي] سيتم تحميل الملف محلياً كنسخة احتياطية.");
+            const blob = new Blob([jsonContent], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "111.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert("تم تحميل الملف محلياً (إما لفشل الرفع أو لعدم ضبط الإعدادات).");
+
+        } catch (error) {
+            console.error("[خطأ فادح أثناء الرفع]:", error);
+            alert("فشل تصدير البيانات.");
+        }
+    });
+
+    addNewEventBtn?.addEventListener("click", () => {
         isCreatingNew = true;
         dateSelector.value = "";
         descriptionDisplay.value = "";
@@ -241,7 +308,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         saveButton.textContent = "حفظ الحدث الجديد";
     });
 
-    saveButton.addEventListener("click", async () => {
+    saveButton?.addEventListener("click", async () => {
         const selectedIndex = dateSelector.value;
         isCreatingNew = false;
 
@@ -297,7 +364,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    copyDateBtn.addEventListener("click", () => {
+    copyDateBtn?.addEventListener("click", () => {
         const selectedOption =
             dateSelector.options[dateSelector.selectedIndex];
         if (selectedOption && selectedOption.value !== "") {
@@ -318,7 +385,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    copyDescriptionBtn.addEventListener("click", () => {
+    copyDescriptionBtn?.addEventListener("click", () => {
         const textToCopy = descriptionDisplay.value;
         if (textToCopy) {
             navigator.clipboard
@@ -336,7 +403,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    pasteDescriptionBtn.addEventListener("click", async () => {
+    pasteDescriptionBtn?.addEventListener("click", async () => {
         if (!navigator.clipboard.readText) {
             alert("متصفحك لا يدعم لصق النص من الحافظة تلقائيًا.");
             return;
@@ -350,7 +417,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    navSearchBtn.addEventListener("click", (e) => {
+    navSearchBtn?.addEventListener("click", (e) => {
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get("eventId");
 
@@ -362,7 +429,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    addLinkBtn.addEventListener("click", () => {
+    addLinkBtn?.addEventListener("click", () => {
         addLinkInput("", true);
     });
 
@@ -409,37 +476,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     // --- UI Logic ---
     async function loadAndPopulateData() {
         try {
+            console.log("%c[بدء التحميل] جاري قراءة البيانات من المتصفح...", "color: #007bff;");
             const dbData = await readDataFromDB(true);
+
             if (dbData && dbData.length > 0) {
                 eventsData = dbData;
+                console.log(`[بيانات] تم العثور على ${eventsData.length} حدث.`);
             } else {
+                console.warn("[تنبيه] قاعدة البيانات فارغة، محاولة التحميل من ملف 111.json...");
                 const response = await fetch("./111.json");
-                if (!response.ok) throw new Error("File not found");
+                if (!response.ok) throw new Error("الملف الافتراضي غير موجود");
                 const fileData = await response.json();
                 await saveDataToDB(fileData);
                 eventsData = await readDataFromDB(true);
             }
 
+            populateDropdown(eventsData);
+            await populateMetadataSelectors(); // Populate dynamic lists
+
+            // --- معالجة الانتقال التلقائي لحدث معين (eventId) ---
             const urlParams = new URLSearchParams(window.location.search);
             const eventIdToSelect = urlParams.get("eventId");
 
-            if (eventIdToSelect) {
-                const originalIndex = eventsData.findIndex(
-                    (event) => event.id == eventIdToSelect
-                );
-                if (originalIndex !== -1) {
+            if (eventIdToSelect && eventsData.length > 0) {
+                console.log(`%c[توجيه هوائي] مطلوب عرض الحدث رقم: ${eventIdToSelect}`, "color: #7952b3; font-weight: bold;");
+
+                // البحث عن السجل المطابق في المصفوفة
+                const targetIndex = eventsData.findIndex(e => String(e.id) === String(eventIdToSelect));
+
+                if (targetIndex !== -1) {
+                    // الانتظار قليلاً للتأكد من اكتمال بناء الـ DOM
                     setTimeout(() => {
-                        dateSelector.value = originalIndex;
+                        dateSelector.value = targetIndex;
                         dateSelector.dispatchEvent(new Event("change"));
-                    }, 100);
+                        console.log("%c[وصلنا] تم تحديد الحدث بنجاح وعرض تفاصيله.", "color: #28a745;");
+                    }, 150);
+                } else {
+                    console.error(`[خطأ توجيه] لم نعثر على حدث يحمل الرقم ${eventIdToSelect} في قاعدة البيانات.`);
                 }
             }
-            populateDropdown(eventsData);
-            await populateMetadataSelectors(); // Populate dynamic lists
         } catch (error) {
-            console.error("Could not fetch events data:", error);
-            descriptionDisplay.value =
-                "فشل في تحميل البيانات. حاول تحميلها من الملف أولاً.";
+            console.error("[خطأ تحميل]:", error);
+            descriptionDisplay.value = "حدث خطأ أثناء تحميل البيانات.";
         }
     }
 
@@ -496,7 +574,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    dateSelector.addEventListener("change", (event) => {
+    dateSelector?.addEventListener("change", (event) => {
         const selectedIndex = event.target.value;
         resetToSelectionMode();
         saveButton.style.display = "none";
@@ -671,14 +749,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         newDateInput,
         condemnationDescription,
     ].forEach((element) => {
-        if (element.tagName.toLowerCase() === "select") {
-            element.addEventListener("change", triggerAutoSave);
-        } else {
-            element.addEventListener("input", triggerAutoSave);
+        if (element) {
+            if (element.tagName.toLowerCase() === "select") {
+                element.addEventListener("change", triggerAutoSave);
+            } else {
+                element.addEventListener("input", triggerAutoSave);
+            }
         }
     });
 
-    condemnationSelector.addEventListener(
+    condemnationSelector?.addEventListener(
         "change",
         handleCondemnationChange
     );
@@ -690,6 +770,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             condemnationDetailsWrapper.style.display = "none";
         }
     }
+
+
 
     await initializeDefaultSettings(); // Ensure settings exist
     await loadAndPopulateData();

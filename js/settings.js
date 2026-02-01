@@ -152,4 +152,30 @@ document.addEventListener("DOMContentLoaded", async () => {
             newTopicInput.value = "";
         }
     });
+
+    // --- GitHub Gist Config Logic ---
+    const githubTokenInput = document.getElementById("github-token");
+    const gistIdInput = document.getElementById("gist-id");
+    const saveGistBtn = document.getElementById("save-gist-config-btn");
+
+    // Load existing config
+    async function loadGistConfig() {
+        const token = await getSetting("github_token");
+        const gistId = await getSetting("gist_id");
+        if (token) githubTokenInput.value = token;
+        if (gistId) gistIdInput.value = gistId;
+    }
+
+    saveGistBtn.addEventListener("click", async () => {
+        const token = githubTokenInput.value.trim();
+        const gistId = gistIdInput.value.trim();
+
+        await setSetting("github_token", token);
+        await setSetting("gist_id", gistId);
+
+        showSaveStatus();
+        alert("تم حفظ إعدادات GitHub بنجاح.");
+    });
+
+    await loadGistConfig();
 });

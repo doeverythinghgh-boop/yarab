@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const topicSelector = document.getElementById("topic-selector");
     const editorContainer = document.getElementById("editor-container");
-    const loadButton = document.getElementById("load-data-btn");
-    const exportButton = document.getElementById("export-data-btn");
+    const loadButton = document.getElementById("load-topics-btn");
+    const exportButton = document.getElementById("export-topics-btn");
 
     let editor = null;
     let autoSaveTimer = null;
@@ -117,11 +117,40 @@ document.addEventListener("DOMContentLoaded", async () => {
         // النقر المزدوج للانتقال
         editor.getWrapperElement().addEventListener("dblclick", async (e) => {
             const pos = editor.coordsChar({ left: e.clientX, top: e.clientY });
-            const token = editor.getTokenAt(pos);
-            if (token && token.type === "date-link") {
-                const event = await findEventByDate(token.string);
-                if (event) window.location.href = `index.html?eventId=${event.id}`;
-                else alert(`لا يوجد حدث مسجل بهذا التاريخ: ${token.string}`);
+            const lineText = editor.getLine(pos.line);
+
+            console.log(`%c[نقر مزدوج] السطر: ${pos.line}, العمود: ${pos.ch}`, "color: #007bff;");
+            console.log(`[نص السطر]: ${lineText}`);
+
+            // البحث عن كافة التواريخ في السطر (صيغة يوم-شهر-سنة أو يوم/شهر/سنة)
+            const dateRegex = /(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/g;
+            const matches = [...lineText.matchAll(dateRegex)];
+            let foundDate = null;
+
+            for (const match of matches) {
+                const start = match.index;
+                const end = start + match[0].length;
+                // توسيع نطاق النقر قليلاً لسهولة الاستخدام
+                if (pos.ch >= start - 1 && pos.ch <= end + 1) {
+                    foundDate = match[0];
+                    break;
+                }
+            }
+
+            if (foundDate) {
+                console.log(`%c[اكتشاف] تم العثور على تاريخ: ${foundDate}`, "color: #28a745; font-weight: bold;");
+                console.log("[بحث] جاري الفحص في سجل الأحداث...");
+
+                const event = await findEventByDate(foundDate);
+                if (event) {
+                    console.log(`%c[تطابق] تم العثور على الحدث رقم (${event.id}). جاري التحويل...`, "color: #28a745;");
+                    window.location.href = `index.html?eventId=${event.id}`;
+                } else {
+                    console.warn(`[تنبيه] التاريخ ${foundDate} موجود كنص ولكن لا يوجد حدث مسجل به في السجل.`);
+                    alert(`لا يوجد حدث مسجل بهذا التاريخ: ${foundDate}`);
+                }
+            } else {
+                console.log("%c[تنبيه] لم يتم التعرف على تاريخ في موضع النقر.", "color: #dc3545;");
             }
         });
 
@@ -174,19 +203,44 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     loadButton.addEventListener("click", async () => {
         try {
-            const response = await fetch("./topics_data.json");
+            const gistId = await getSetting("gist_id");
+            if (!gistId) {
+                console.error("[الموضوعات] خطأ: المعرف Gist ID غير موجود.");
+                alert("يرجى ضبط Gist ID في صفحة الإعدادات أولاً.");
+                return;
+            }
+
+            console.log(`%c[الموضوعات] بدء جلب المواضيع من الـ Gist: ${gistId}`, "color: #007bff; font-weight: bold;");
+            const response = await fetch(`https://api.github.com/gists/${gistId}`);
+
             if (response.ok) {
-                const fileData = await response.json();
+                const gistData = await response.json();
+                const file = gistData.files["topics_data.json"];
+                if (!file) {
+                    console.warn("[تنبيه] ملف topics_data.json مفقود من الـ Gist.");
+                    throw new Error("الملف topics_data.json غير موجود في هذا الـ Gist.");
+                }
+
+                console.log("[خطوة 1] استلام محتوى المواضيع. جاري التحويل للحفظ المحلي...");
+                const fileData = JSON.parse(file.content);
                 await importData(fileData);
-                alert("تم تحميل البيانات بنجاح من الملف.");
-                if (topicSelector.value) topicSelector.dispatchEvent(new Event("change"));
-                else location.reload(); // إعادة تحميل لرؤية المواضيع الجديدة
+
+                console.log("[خطوة 2] تم تحديث IndexedDB بكافة نصوص المواضيع الجديدة.");
+                alert("تمت المزامنة بنجاح من GitHub Gist (الموضوعات).");
+
+                if (topicSelector.value) {
+                    console.log("[خطوة 3] تحديث العرض الحالي للموضوع المختار...");
+                    topicSelector.dispatchEvent(new Event("change"));
+                } else {
+                    location.reload();
+                }
             } else {
-                alert("لم يتم العثور على ملف topics_data.json");
+                console.error(`[خطأ] تفاعل GitHub API غير سليم. الحالة: ${response.status}`);
+                alert(`فشل جلب الملف. الحالة: ${response.status}`);
             }
         } catch (err) {
-            console.error("Load error:", err);
-            alert("حدث خطأ أثناء تحميل البيانات.");
+            console.error("[فشل جلب المواضيع]:", err.message);
+            alert(`خطأ: ${err.message}`);
         }
     });
 
@@ -202,32 +256,77 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     exportButton.addEventListener("click", async () => {
         try {
+            console.log("%c[تحديث السحابة] بدء رفع الموضوعات إلى GitHub Gist...", "color: #28a745; font-weight: bold; font-size: 1.1em;");
+
+            const githubToken = await getSetting("github_token");
+            const gistId = await getSetting("gist_id");
+
+            console.log("[خطوة 1] استخراج المواضيع من قاعدة البيانات المحلية...");
             const db = await openDB();
-            const transaction = db.transaction(currentStoreName, "readonly");
-            const store = transaction.objectStore(currentStoreName);
+            const tx = db.transaction(topicsStoreName, "readonly");
+            const store = tx.objectStore(topicsStoreName);
             const request = store.getAll();
-            request.onsuccess = () => {
-                const blob = new Blob([JSON.stringify(request.result, null, 2)], { type: "application/json" });
+
+            request.onsuccess = async () => {
+                const allData = request.result;
+                console.log(`[خطوة 2] تم تجهيز ${allData.length} موضوع. تحويل البيانات لصيغة JSON...`);
+                const jsonContent = JSON.stringify(allData, null, 2);
+
+                if (githubToken && gistId) {
+                    console.log(`[خطوة 3] جاري الاتصال بـ GitHub API لتحديث الملف: topics_data.json`);
+                    console.log("%c[جاري الإرسال...] يرجى الانتظار ثواني...", "color: #ffc107;");
+
+                    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+                        method: "PATCH",
+                        headers: {
+                            "Authorization": `token ${githubToken}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            files: {
+                                "topics_data.json": { content: jsonContent }
+                            }
+                        })
+                    });
+
+                    if (response.ok) {
+                        console.log("%c[نجاح] تمت عملية الرفع بنجاح! السحابة الآن محدثة بمواضيعك.", "color: #28a745; font-weight: bold;");
+                        alert("✅ تم تحديث الموضوعات على GitHub Gist بنجاح!");
+                        return;
+                    } else {
+                        console.error(`[فشل] لم ينجح الرفع السحابي. الحالة: ${response.status}`);
+                    }
+                }
+
+                console.log("[إجراء احتياطي] تحميل البيانات كملف محلي.");
+                const blob = new Blob([jsonContent], { type: "application/json" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
                 a.download = "topics_data.json";
+                document.body.appendChild(a);
                 a.click();
-                alert("تم تصدير البيانات بنجاح.");
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                alert("تم تحميل ملف الموضوعات محلياً.");
             };
-        } catch (e) { alert("فشل تصدير البيانات."); }
+        } catch (err) {
+            console.error("[خطأ في التصدير]:", err);
+            alert("حدث خطأ أثناء التصدير.");
+        }
     });
 
     async function initializePage() {
         console.log("[Page] Initializing...");
-        await initializeDefaultSettings();
+        await initializeDefaultSettings(); // ضمان وجود المعرفات
 
-        const list = await getTopicsList();
+        const list = await getSetting("topicsList");
         topicSelector.innerHTML = '<option value="">-- اختر موضوعًا --</option>';
         if (list) {
             list.forEach(t => {
                 const opt = document.createElement("option");
-                opt.value = t.id; opt.textContent = t.name;
+                opt.value = t.id;
+                opt.textContent = t.name;
                 topicSelector.appendChild(opt);
             });
         }
@@ -237,11 +336,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             topicSelector.value = saved;
             topicSelector.dispatchEvent(new Event("change"));
         }
+
+        window.addEventListener("pagehide", () => {
+            if (topicSelector.value) sessionStorage.setItem("selectedTopicId", topicSelector.value);
+        });
     }
 
-    window.addEventListener("pagehide", () => {
-        if (topicSelector.value) sessionStorage.setItem("selectedTopicId", topicSelector.value);
-    });
-
-    initializePage();
+    await initializePage();
 });

@@ -90,8 +90,22 @@ async function getSetting(key) {
   const store = transaction.objectStore(settingsStoreName);
   return new Promise((resolve) => {
     const req = store.get(key);
-    req.onsuccess = () => resolve(req.result ? req.result.value : null); // Return null if not found
+    req.onsuccess = () => resolve(req.result ? req.result.value : null);
     req.onerror = () => resolve(null);
+  });
+}
+
+/**
+ * دالة مساعدة لحفظ إعداد معين
+ */
+async function setSetting(key, value) {
+  const db = await openDB();
+  const transaction = db.transaction(settingsStoreName, "readwrite");
+  const store = transaction.objectStore(settingsStoreName);
+  return new Promise((resolve, reject) => {
+    const req = store.put({ key: key, value: value });
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
   });
 }
 
@@ -107,27 +121,21 @@ async function initializeDefaultSettings() {
   const condemnations = await getSetting("condemnations");
   const topics = await getSetting("topicsList");
 
-  // If any is missing, re-seed all default data
+  // ملاحظة أمنية: تم إزالة الـ Token من هنا لأن GitHub يمنع رفع الأكواد التي تحتوي على "Secrets".
+  // سيقوم التطبيق الآن باستخدام الـ Token الذي قمت بإدخاله يدوياً في صفحة الإعدادات لمرة واحدة فقط وسيبقى محفوظاً في جهازك.
+  const gistId = "03224b07410b79be95dca509dff3c472";
+
+  const tx = db.transaction(settingsStoreName, "readwrite");
+  const store = tx.objectStore(settingsStoreName);
+
+  // حفظ الـ ID فقط، والـ Token يتم جلبه من الإعدادات التي قمت بحفظها سابقاً
+  store.put({ key: "gist_id", value: gistId });
+
+  // If any basic setting is missing, seed default data
   if (!tags || !condemnations || !topics) {
-    console.log("Seeding default settings...");
-    const tx = db.transaction(settingsStoreName, "readwrite");
-    const store = tx.objectStore(settingsStoreName);
-
-    const initialTags = [
-      "لا اعرف", "اصلي", "خطر", "لا يمكن تجاهله", "تم تقديمة"
-    ];
-
-    const initialCondemnations = [
-      "مدير عام مساعد الصيانة",
-      "مدير عام",
-      "مدير عام و مساعد",
-      "مدير عام مساعد+مقاول",
-      "مدير عام+مساعد+مقاول",
-      "مقاول",
-      "لي",
-      "لصالحي"
-    ];
-
+    console.log("Seeding default lists...");
+    const initialTags = ["لا اعرف", "اصلي", "خطر", "لا يمكن تجاهله", "تم تقديمة"];
+    const initialCondemnations = ["مدير عام مساعد الصيانة", "مدير عام", "مدير عام و مساعد", "مدير عام مساعد+مقاول", "مدير عام+مساعد+مقاول", "مقاول", "لي", "لصالحي"];
     const initialTopics = [
       { id: "1", name: "مسؤوليه المهندس المشرف" },
       { id: "2", name: "الحيادية والعدل" },
@@ -140,15 +148,15 @@ async function initializeDefaultSettings() {
     if (!tags) store.put({ key: "tags", value: initialTags });
     if (!condemnations) store.put({ key: "condemnations", value: initialCondemnations });
     if (!topics) store.put({ key: "topicsList", value: initialTopics });
-
-    return new Promise((resolve) => {
-      tx.oncomplete = () => {
-        console.log("Default settings seeded.");
-        resolve();
-      }
-      tx.onerror = () => resolve();
-    });
   }
+
+  return new Promise((resolve) => {
+    tx.oncomplete = () => {
+      console.log("[Database] GitHub Config & Settings Ensuring: OK");
+      resolve();
+    };
+    tx.onerror = () => resolve();
+  });
 }
 
 
