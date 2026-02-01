@@ -1,4 +1,4 @@
-const CACHE_NAME = "events-app-v7";
+const CACHE_NAME = "events-app-v8";
 const ASSETS_TO_CACHE = [
     "./",
     "./index.html",
@@ -18,7 +18,11 @@ const ASSETS_TO_CACHE = [
     "./js/topics.js",
     "./js/settings.js",
     "./js/timeline.js",
-    "./js/pwa-loader.js"
+    "./js/pwa-loader.js",
+    "https://unpkg.com/codemirror@5.65.13/lib/codemirror.css",
+    "https://unpkg.com/codemirror@5.65.13/lib/codemirror.js",
+    "https://unpkg.com/codemirror@5.65.13/addon/mode/overlay.js",
+    "https://unpkg.com/codemirror@5.65.13/addon/selection/active-line.js"
 ];
 
 // Install Event

@@ -1,31 +1,34 @@
-import { EditorView, basicSetup } from "https://cdn.skypack.dev/codemirror@6.0.1";
-import { EditorState } from "https://cdn.skypack.dev/@codemirror/state@6.0.1";
-import { Decoration, ViewPlugin, MatchDecorator } from "https://cdn.skypack.dev/@codemirror/view@6.0.1";
-
 document.addEventListener("DOMContentLoaded", async () => {
     const topicSelector = document.getElementById("topic-selector");
     const editorContainer = document.getElementById("editor-container");
     const loadButton = document.getElementById("load-data-btn");
     const exportButton = document.getElementById("export-data-btn");
 
-    let editorView = null;
+    let editor = null;
     let autoSaveTimer = null;
     const currentStoreName = topicsStoreName;
 
-    // --- Database Functions (Preserved from original) ---
-    async function getTopicsList() {
-        return await getSetting("topicsList");
-    }
+    // --- قاعدة البيانات ---
+    async function getTopicsList() { return await getSetting("topicsList"); }
 
     async function getTopicContent(topicId) {
-        const db = await openDB();
-        const transaction = db.transaction(currentStoreName, "readonly");
-        const store = transaction.objectStore(currentStoreName);
-        const request = store.get(topicId);
-        return new Promise((resolve) => {
-            request.onsuccess = () => resolve(request.result ? request.result.content : "");
-            request.onerror = () => resolve("");
-        });
+        try {
+            const db = await openDB();
+            const transaction = db.transaction(currentStoreName, "readonly");
+            const store = transaction.objectStore(currentStoreName);
+            const request = store.get(topicId);
+            return new Promise((resolve) => {
+                request.onsuccess = () => {
+                    const res = request.result;
+                    console.log(`[Database] Loaded content for ${topicId}:`, res ? "Exists" : "Empty");
+                    resolve(res ? res.content : "");
+                };
+                request.onerror = () => resolve("");
+            });
+        } catch (e) {
+            console.error("[Database] Error loading content:", e);
+            return "";
+        }
     }
 
     async function saveTopicContent(topicId, content) {
@@ -33,131 +36,139 @@ document.addEventListener("DOMContentLoaded", async () => {
         const transaction = db.transaction(currentStoreName, "readwrite");
         const store = transaction.objectStore(currentStoreName);
         store.put({ id: topicId, content: content });
-        return new Promise((resolve, reject) => {
-            transaction.oncomplete = () => {
-                showSaveStatus();
-                resolve();
-            };
-            transaction.onerror = (event) => reject(event.target.error);
+        return new Promise((resolve) => {
+            transaction.oncomplete = () => { showSaveStatus(); resolve(); };
         });
     }
 
-    // --- Search Event Logic ---
     async function findEventByDate(dateString) {
         const db = await openDB();
         const transaction = db.transaction("events", "readonly");
         const store = transaction.objectStore("events");
         const request = store.getAll();
-
         const normalizeDate = (ds) => {
             if (!ds) return "";
             const cleanDs = ds.replace(/\//g, "-");
             const parts = cleanDs.split("-");
-            if (parts.length !== 3) return ds;
-            return `${parseInt(parts[0], 10)}-${parseInt(parts[1], 10)}-${parseInt(parts[2], 10)}`;
+            return parts.length === 3 ? `${parseInt(parts[0], 10)}-${parseInt(parts[1], 10)}-${parseInt(parts[2], 10)}` : ds;
         };
-
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             request.onsuccess = () => {
-                const allEvents = request.result;
                 const normalizedDateToFind = normalizeDate(dateString);
-                const foundEvent = allEvents.find(e => normalizeDate(e.date) === normalizedDateToFind);
-                resolve(foundEvent);
+                resolve(request.result.find(e => normalizeDate(e.date) === normalizedDateToFind));
             };
-            request.onerror = (e) => reject(e.target.error);
+            request.onerror = () => resolve(null);
         });
     }
 
-    // --- CodeMirror Extension: Date Highlighting & Interaction ---
-    const dateDecorator = new MatchDecorator({
-        regexp: /(?<!\d)(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})(?!\d)/g,
-        decoration: m => Decoration.mark({
-            class: "cm-date-link",
-            attributes: { title: "انقر مرتين للانتقال للحدث" }
-        })
-    });
+    // --- منطق المحرر ---
+    function initEditor(topicId, content) {
+        console.log(`[خطوة 1] بدء تهيئة المحرر للموضوع رقم: ${topicId}`);
+        console.log(`[البيانات] النص المستلم من قاعدة البيانات طوله: ${content ? content.length : 0} حرفاً.`);
 
-    const datePlugin = ViewPlugin.fromClass(class {
-        constructor(view) { this.decorations = dateDecorator.createDeco(view); }
-        update(update) { this.decorations = dateDecorator.updateDeco(update, this.decorations); }
-    }, {
-        decorations: v => v.decorations,
-        eventHandlers: {
-            dblclick: (event, view) => {
-                const target = event.target;
-                if (target.classList.contains("cm-date-link")) {
-                    const dateText = target.textContent;
-                    handleDateNavigation(dateText);
-                }
-            }
+        // فحص وجود المكتبة الأساسية
+        if (!window.CodeMirror) {
+            console.error("[خطأ] مكتبة CodeMirror غير معرفة.");
+            alert("خطأ في تحميل المكتبة.");
+            return;
         }
-    });
 
-    const handleDateNavigation = async (dateText) => {
+        // فحص وجود الإضافات الضرورية
+        if (typeof window.CodeMirror.prototype.addOverlay !== "function") {
+            console.error("[خطأ في الملحقات] إضافة (overlay.js) لم يتم تحميلها بشكل صحيح.");
+            console.warn("[نصيحة] ربما تم تحميل مكتبة CodeMirror ولكن فشل تحميل الملحق addon/mode/overlay.js.");
+            alert("خطأ: ملحقات المحرر ناقصة. يرجى تحديث الصفحة.");
+            return;
+        }
+
+        // مسح أي محتوى سابق لضمان نظافة الحاوية
+        console.log("[خطوة 2] تنظيف الحاوية وإنشاء كائن CodeMirror جديد.");
+        editorContainer.innerHTML = "";
+        editor = null;
+
+        // إنشاء المحرر
         try {
-            const event = await findEventByDate(dateText);
-            if (event) {
-                window.location.href = `index.html?eventId=${event.id}`;
-            } else {
-                alert(`لم يتم العثور على حدث مرتبط بالتاريخ: ${dateText}`);
-            }
-        } catch (error) {
-            console.error("Navigation error:", error);
+            editor = CodeMirror(editorContainer, {
+                value: content || "",
+                lineNumbers: true,
+                lineWrapping: true,
+                direction: "rtl",
+                rtlMoveVisually: true,
+                styleActiveLine: true,
+                theme: "default"
+            });
+            console.log("[خطوة 3] تم إنشاء كائن المحرر بنجاح.");
+        } catch (err) {
+            console.error("[خطأ] فشل إنشاء كائن CodeMirror:", err);
+            return;
         }
-    };
 
-    // --- Editor Initialization ---
-    async function initEditor(topicId, initialContent) {
-        if (editorView) editorView.destroy();
-
-        const state = EditorState.create({
-            doc: initialContent,
-            extensions: [
-                basicSetup,
-                datePlugin,
-                EditorView.lineWrapping,
-                EditorView.theme({
-                    "&": { height: "70vh", fontSize: "16px", direction: "rtl", textAlign: "right" },
-                    ".cm-content": { fontFamily: "Tahoma, Segoe UI, sans-serif", padding: "10px" },
-                    ".cm-date-link": {
-                        color: "#0056b3",
-                        backgroundColor: "#fffbdd",
-                        borderBottom: "2px solid #ffc107",
-                        borderRadius: "2px",
-                        cursor: "pointer",
-                        fontWeight: "bold"
-                    },
-                    "&.cm-focused": { outline: "none" }
-                }),
-                EditorView.updateListener.of((update) => {
-                    if (update.docChanged) {
-                        clearTimeout(autoSaveTimer);
-                        autoSaveTimer = setTimeout(() => {
-                            saveTopicContent(topicId, update.state.doc.toString());
-                        }, 800);
-                    }
-                })
-            ]
+        // إضافة تظليل التواريخ
+        console.log("[خطوة 4] إضافة طبقة تظليل التواريخ (Overlay).");
+        const dateRegex = /(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/;
+        editor.addOverlay({
+            token: function (stream) {
+                if (stream.match(dateRegex)) return "date-link";
+                stream.next();
+                return null;
+            }
         });
 
-        editorView = new EditorView({
-            state,
-            parent: editorContainer
+        // النقر المزدوج للانتقال
+        editor.getWrapperElement().addEventListener("dblclick", async (e) => {
+            const pos = editor.coordsChar({ left: e.clientX, top: e.clientY });
+            const token = editor.getTokenAt(pos);
+            if (token && token.type === "date-link") {
+                const event = await findEventByDate(token.string);
+                if (event) window.location.href = `index.html?eventId=${event.id}`;
+                else alert(`لا يوجد حدث مسجل بهذا التاريخ: ${token.string}`);
+            }
         });
 
-        // Ensure RTL Support for the content editable div
-        editorView.contentDOM.setAttribute("dir", "rtl");
+        // فحص نهائي للظهور
+        const wrapper = editor.getWrapperElement();
+        console.log("[فحص فيزيائي] أبعاد المحرر الحالية:", {
+            width: wrapper.offsetWidth,
+            height: wrapper.offsetHeight,
+            visible: wrapper.style.display !== 'none'
+        });
+
+        if (wrapper.offsetHeight === 0) {
+            console.warn("[تحذير] طول المحرر صفر! قد يكون هناك تداخل في تنسيقات CSS يمنع ظهوره.");
+        }
+
+        // تحديث التغييرات والحفظ
+        editor.on("change", () => {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                const currentText = editor.getValue();
+                console.log(`[حفظ] جاري حفظ تغييرات الموضوع ${topicId}. طول النص الجديد: ${currentText.length}`);
+                saveTopicContent(topicId, currentText);
+            }, 800);
+        });
+
+        // إجبار التحديث والتركيز لضمان ظهور النص
+        setTimeout(() => {
+            console.log("[خطوة 5] تنفيذ أمر Refresh و Focus.");
+            editor.refresh();
+            editor.focus();
+            if (editor.getValue() !== content) {
+                console.error("[خطأ] النص الموجود في المحرر لا يطابق النص المستلم من قاعدة البيانات!");
+            } else {
+                console.log("[نجاح] النص مثبت داخل المحرر وجاهز للعرض.");
+            }
+        }, 150);
     }
 
-    // --- UI Interactions ---
+    // --- تفاعلات الواجهة ---
     topicSelector.addEventListener("change", async (e) => {
-        const topicId = e.target.value;
-        if (topicId) {
-            const content = await getTopicContent(topicId);
-            await initEditor(topicId, content);
+        const tid = e.target.value;
+        if (tid) {
+            const content = await getTopicContent(tid);
+            initEditor(tid, content);
         } else {
-            if (editorView) editorView.destroy();
             editorContainer.innerHTML = "";
+            editor = null;
         }
     });
 
@@ -167,10 +178,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (response.ok) {
                 const fileData = await response.json();
                 await importData(fileData);
-                alert("تم تحميل البيانات بنجاح.");
+                alert("تم تحميل البيانات بنجاح من الملف.");
                 if (topicSelector.value) topicSelector.dispatchEvent(new Event("change"));
+                else location.reload(); // إعادة تحميل لرؤية المواضيع الجديدة
+            } else {
+                alert("لم يتم العثور على ملف topics_data.json");
             }
-        } catch (err) { alert("حدث خطأ أثناء تحميل الملف."); }
+        } catch (err) {
+            console.error("Load error:", err);
+            alert("حدث خطأ أثناء تحميل البيانات.");
+        }
     });
 
     async function importData(data) {
@@ -178,41 +195,46 @@ document.addEventListener("DOMContentLoaded", async () => {
         const transaction = db.transaction(currentStoreName, "readwrite");
         const store = transaction.objectStore(currentStoreName);
         store.clear();
-        data.forEach(item => store.add(item));
+        for (const item of data) {
+            store.add(item);
+        }
     }
 
     exportButton.addEventListener("click", async () => {
-        const db = await openDB();
-        const transaction = db.transaction(currentStoreName, "readonly");
-        const store = transaction.objectStore(currentStoreName);
-        const request = store.getAll();
-        request.onsuccess = () => {
-            const blob = new Blob([JSON.stringify(request.result, null, 2)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "topics_data.json";
-            a.click();
-        };
+        try {
+            const db = await openDB();
+            const transaction = db.transaction(currentStoreName, "readonly");
+            const store = transaction.objectStore(currentStoreName);
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const blob = new Blob([JSON.stringify(request.result, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "topics_data.json";
+                a.click();
+                alert("تم تصدير البيانات بنجاح.");
+            };
+        } catch (e) { alert("فشل تصدير البيانات."); }
     });
 
-    // --- Page Bootstrapping ---
     async function initializePage() {
-        const topicsList = await getTopicsList();
-        topicSelector.innerHTML = '<option value="">-- اختر موضوعًا --</option>';
-        if (topicsList) {
-            topicsList.forEach(topic => {
-                const option = document.createElement("option");
-                option.value = topic.id;
-                option.textContent = topic.name;
-                topicSelector.appendChild(option);
-            });
-        }
+        console.log("[Page] Initializing...");
         await initializeDefaultSettings();
 
-        const savedTopicId = sessionStorage.getItem("selectedTopicId");
-        if (savedTopicId) {
-            topicSelector.value = savedTopicId;
+        const list = await getTopicsList();
+        topicSelector.innerHTML = '<option value="">-- اختر موضوعًا --</option>';
+        if (list) {
+            list.forEach(t => {
+                const opt = document.createElement("option");
+                opt.value = t.id; opt.textContent = t.name;
+                topicSelector.appendChild(opt);
+            });
+        }
+
+        const saved = sessionStorage.getItem("selectedTopicId");
+        if (saved) {
+            topicSelector.value = saved;
             topicSelector.dispatchEvent(new Event("change"));
         }
     }
