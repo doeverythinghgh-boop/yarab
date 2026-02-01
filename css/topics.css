@@ -1,72 +1,76 @@
-/* تنسيقات خاصة بصفحة الموضوعات */
+/* تنسيقات صفحة الموضوعات الاحترافية */
 
-textarea {
-    width: 100%;
-    min-height: 300px;
-    padding: 10px;
-    border-radius: 6px;
+#editor-container {
+    margin-top: 20px;
     border: 1px solid #ccd0d5;
-    font-size: 1em;
-    box-sizing: border-box;
-    resize: vertical;
-    margin-top: 15px;
-    line-height: 1.6;
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
 }
 
-/* حاوية المحرر الجديدة */
-.editor-wrapper {
-    position: relative;
-    margin-top: 15px;
-    width: 100%;
-    min-height: 300px;
-    font-size: 1em;
-    line-height: 1.6;
+#editor-container:focus-within {
+    box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15);
+    border-color: #0056b3;
 }
 
-.editor-wrapper>textarea,
-.editor-wrapper>#highlighter {
-    margin: 0;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ccd0d5;
-    font: inherit;
-    letter-spacing: inherit;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    min-height: 300px;
-    box-sizing: border-box;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    resize: none;
-    /* يتم التحكم به من خلال textarea */
+/* تنسيقات CodeMirror الأساسية */
+.cm-editor {
+    height: 75vh;
+    outline: none !important;
 }
 
-.editor-wrapper>textarea {
-    z-index: 1;
-    background-color: transparent;
-    color: #1c1e21;
-    position: relative;
-    /* لضمان عمل z-index */
+.cm-scroller {
+    font-family: 'Segoe UI', Tahoma, sans-serif !important;
+    line-height: 1.8 !important;
 }
 
-.editor-wrapper>#highlighter {
-    z-index: 2;
-    background-color: transparent;
-    pointer-events: none;
-    /* يسمح للنقرات بالمرور للتكست أريا */
-    color: transparent;
+/* تخصيص الروابط التفاعلية للتواريخ */
+.cm-date-link {
+    display: inline-block;
+    padding: 0 4px;
+    margin: 0 2px;
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    color: #0056b3 !important;
+    border-bottom: 2px solid #ffc107 !important;
+    border-radius: 4px;
+    transition: all 0.2s ease;
 }
 
-.editor-wrapper #highlighter .date-highlight {
-    background-color: rgba(255, 251, 221, 0.5);
-    /* تظليل شبه شفاف */
-    color: transparent;
-    border-bottom: 2px solid #ffc107;
-    /* إضافة خط تحت التاريخ لتمييزه */
-    border-radius: 2px;
-    pointer-events: auto;
-    /* يجعل التاريخ قابلاً للنقر */
-    cursor: pointer;
+.cm-date-link:hover {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* تحسينات القوائم والمدخلات في صفحة الموضوعات */
+#topics-selector-wrapper {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+
+#topic-selector {
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* شريط التمرير الأنيق */
+.cm-scroller::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cm-scroller::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb:hover {
+    background: #999;
 }

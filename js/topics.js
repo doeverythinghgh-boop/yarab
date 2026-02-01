@@ -1,23 +1,20 @@
+import { EditorView, basicSetup } from "https://cdn.skypack.dev/codemirror@6.0.1";
+import { EditorState } from "https://cdn.skypack.dev/@codemirror/state@6.0.1";
+import { Decoration, ViewPlugin, MatchDecorator } from "https://cdn.skypack.dev/@codemirror/view@6.0.1";
+
 document.addEventListener("DOMContentLoaded", async () => {
     const topicSelector = document.getElementById("topic-selector");
-    const contentArea = document.getElementById("content-area");
+    const editorContainer = document.getElementById("editor-container");
     const loadButton = document.getElementById("load-data-btn");
     const exportButton = document.getElementById("export-data-btn");
 
-    // saveStatus might be needed if common function isn't enough or different ID? 
-    // topics.html has <p id="save-status"></p> and uses showSaveStatus locally defined.
-    // We can use the global or define local helper. Global showSaveStatus in db.js handles id="save-status".
-
-    // Use global topicsStoreName from db.js
-    const currentStoreName = topicsStoreName;
+    let editorView = null;
     let autoSaveTimer = null;
+    const currentStoreName = topicsStoreName;
 
-    // List is now fetched from DB settings
-
-    // OpenDB imported from db.js
-
+    // --- Database Functions (Preserved from original) ---
     async function getTopicsList() {
-        return await getSetting("topicsList"); // defined in db.js
+        return await getSetting("topicsList");
     }
 
     async function getTopicContent(topicId) {
@@ -25,11 +22,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const transaction = db.transaction(currentStoreName, "readonly");
         const store = transaction.objectStore(currentStoreName);
         const request = store.get(topicId);
-
         return new Promise((resolve) => {
-            request.onsuccess = () => {
-                resolve(request.result ? request.result.content : "");
-            };
+            request.onsuccess = () => resolve(request.result ? request.result.content : "");
             request.onerror = () => resolve("");
         });
     }
@@ -39,83 +33,133 @@ document.addEventListener("DOMContentLoaded", async () => {
         const transaction = db.transaction(currentStoreName, "readwrite");
         const store = transaction.objectStore(currentStoreName);
         store.put({ id: topicId, content: content });
-
         return new Promise((resolve, reject) => {
             transaction.oncomplete = () => {
-                showSaveStatus(); // Utilizes the global function
+                showSaveStatus();
                 resolve();
             };
             transaction.onerror = (event) => reject(event.target.error);
         });
     }
 
-    async function importData(data) {
-        const db = await openDB();
-        const transaction = db.transaction(currentStoreName, "readwrite");
-        const store = transaction.objectStore(currentStoreName);
-        store.clear();
-        data.forEach((item) => store.add(item));
-        return new Promise((resolve, reject) => {
-            transaction.oncomplete = resolve;
-            transaction.onerror = (e) => reject(e.target.error);
-        });
-    }
-
-    async function exportData() {
-        const db = await openDB();
-        const transaction = db.transaction(currentStoreName, "readonly");
-        const store = transaction.objectStore(currentStoreName);
-        const request = store.getAll();
-
-        return new Promise((resolve, reject) => {
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = (e) => reject(e.target.error);
-        });
-    }
-
+    // --- Search Event Logic ---
     async function findEventByDate(dateString) {
         const db = await openDB();
-        const transaction = db.transaction("events", "readonly"); // Accessing events store safely
+        const transaction = db.transaction("events", "readonly");
         const store = transaction.objectStore("events");
         const request = store.getAll();
 
         const normalizeDate = (ds) => {
             if (!ds) return "";
-            // Replace / with - to normalize
             const cleanDs = ds.replace(/\//g, "-");
             const parts = cleanDs.split("-");
             if (parts.length !== 3) return ds;
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10);
-            const year = parseInt(parts[2], 10);
-            return `${day}-${month}-${year}`;
+            return `${parseInt(parts[0], 10)}-${parseInt(parts[1], 10)}-${parseInt(parts[2], 10)}`;
         };
 
         return new Promise((resolve, reject) => {
             request.onsuccess = () => {
-                console.log("[تتبع] تم جلب جميع الأحداث من قاعدة البيانات.");
                 const allEvents = request.result;
                 const normalizedDateToFind = normalizeDate(dateString);
-                console.log(
-                    `[تتبع] البحث عن التاريخ بعد التنسيق: "${normalizedDateToFind}"`
-                );
-
-                const foundEvent = allEvents.find(
-                    (event) => normalizeDate(event.date) === normalizedDateToFind
-                );
-
-                console.log("[تتبع] نتيجة البحث:", foundEvent);
+                const foundEvent = allEvents.find(e => normalizeDate(e.date) === normalizedDateToFind);
                 resolve(foundEvent);
             };
-            request.onerror = (e) =>
-                reject(
-                    console.error(
-                        "[تتبع] خطأ في قراءة قاعدة البيانات:",
-                        e.target.error
-                    )
-                );
+            request.onerror = (e) => reject(e.target.error);
         });
     }
+
+    // --- CodeMirror Extension: Date Highlighting & Interaction ---
+    const dateDecorator = new MatchDecorator({
+        regexp: /(?<!\d)(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})(?!\d)/g,
+        decoration: m => Decoration.mark({
+            class: "cm-date-link",
+            attributes: { title: "انقر مرتين للانتقال للحدث" }
+        })
+    });
+
+    const datePlugin = ViewPlugin.fromClass(class {
+        constructor(view) { this.decorations = dateDecorator.createDeco(view); }
+        update(update) { this.decorations = dateDecorator.updateDeco(update, this.decorations); }
+    }, {
+        decorations: v => v.decorations,
+        eventHandlers: {
+            dblclick: (event, view) => {
+                const target = event.target;
+                if (target.classList.contains("cm-date-link")) {
+                    const dateText = target.textContent;
+                    handleDateNavigation(dateText);
+                }
+            }
+        }
+    });
+
+    const handleDateNavigation = async (dateText) => {
+        try {
+            const event = await findEventByDate(dateText);
+            if (event) {
+                window.location.href = `index.html?eventId=${event.id}`;
+            } else {
+                alert(`لم يتم العثور على حدث مرتبط بالتاريخ: ${dateText}`);
+            }
+        } catch (error) {
+            console.error("Navigation error:", error);
+        }
+    };
+
+    // --- Editor Initialization ---
+    async function initEditor(topicId, initialContent) {
+        if (editorView) editorView.destroy();
+
+        const state = EditorState.create({
+            doc: initialContent,
+            extensions: [
+                basicSetup,
+                datePlugin,
+                EditorView.lineWrapping,
+                EditorView.theme({
+                    "&": { height: "70vh", fontSize: "16px", direction: "rtl", textAlign: "right" },
+                    ".cm-content": { fontFamily: "Tahoma, Segoe UI, sans-serif", padding: "10px" },
+                    ".cm-date-link": {
+                        color: "#0056b3",
+                        backgroundColor: "#fffbdd",
+                        borderBottom: "2px solid #ffc107",
+                        borderRadius: "2px",
+                        cursor: "pointer",
+                        fontWeight: "bold"
+                    },
+                    "&.cm-focused": { outline: "none" }
+                }),
+                EditorView.updateListener.of((update) => {
+                    if (update.docChanged) {
+                        clearTimeout(autoSaveTimer);
+                        autoSaveTimer = setTimeout(() => {
+                            saveTopicContent(topicId, update.state.doc.toString());
+                        }, 800);
+                    }
+                })
+            ]
+        });
+
+        editorView = new EditorView({
+            state,
+            parent: editorContainer
+        });
+
+        // Ensure RTL Support for the content editable div
+        editorView.contentDOM.setAttribute("dir", "rtl");
+    }
+
+    // --- UI Interactions ---
+    topicSelector.addEventListener("change", async (e) => {
+        const topicId = e.target.value;
+        if (topicId) {
+            const content = await getTopicContent(topicId);
+            await initEditor(topicId, content);
+        } else {
+            if (editorView) editorView.destroy();
+            editorContainer.innerHTML = "";
+        }
+    });
 
     loadButton.addEventListener("click", async () => {
         try {
@@ -123,243 +167,59 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (response.ok) {
                 const fileData = await response.json();
                 await importData(fileData);
-                alert("تم تحميل وحفظ البيانات بنجاح.");
-                if (topicSelector.value) {
-                    topicSelector.dispatchEvent(new Event("change"));
-                }
-            } else if (response.status === 404) {
-                await initializeEmptyData();
-                alert(
-                    "لم يتم العثور على ملف بيانات، تم إنشاء بيانات أولية فارغة."
-                );
-            } else {
-                alert(
-                    "ملف 'topics_data.json' غير موجود أو لا يمكن الوصول إليه. يمكنك إنشاء بيانات جديدة وتصديرها لاحقًا."
-                );
+                alert("تم تحميل البيانات بنجاح.");
+                if (topicSelector.value) topicSelector.dispatchEvent(new Event("change"));
             }
-        } catch (error) {
-            console.error("Error loading or saving data:", error);
-            alert("فشل تحميل أو حفظ البيانات. قد يكون الملف غير موجود.");
-        }
+        } catch (err) { alert("حدث خطأ أثناء تحميل الملف."); }
     });
+
+    async function importData(data) {
+        const db = await openDB();
+        const transaction = db.transaction(currentStoreName, "readwrite");
+        const store = transaction.objectStore(currentStoreName);
+        store.clear();
+        data.forEach(item => store.add(item));
+    }
 
     exportButton.addEventListener("click", async () => {
-        try {
-            const dataToExport = await exportData();
-            if (!dataToExport || dataToExport.length === 0) {
-                alert("لا توجد بيانات لتصديرها.");
-                return;
-            }
-
-            const jsonString = JSON.stringify(dataToExport, null, 2);
-            const blob = new Blob([jsonString], { type: "application/json" });
-
-            if (window.showSaveFilePicker) {
-                try {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: "topics_data.json",
-                        types: [
-                            {
-                                description: "JSON Files",
-                                accept: { "application/json": [".json"] },
-                            },
-                        ],
-                    });
-                    const writable = await handle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    alert("تم حفظ الملف بنجاح.");
-                } catch (err) {
-                    if (err.name !== "AbortError") {
-                        console.error("Error saving file:", err);
-                        alert("فشل حفظ الملف.");
-                    }
-                }
-            } else {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "topics_data.json";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        } catch (error) {
-            console.error("Error exporting data:", error);
-            alert("فشل تصدير البيانات.");
-        }
+        const db = await openDB();
+        const transaction = db.transaction(currentStoreName, "readonly");
+        const store = transaction.objectStore(currentStoreName);
+        const request = store.getAll();
+        request.onsuccess = () => {
+            const blob = new Blob([JSON.stringify(request.result, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "topics_data.json";
+            a.click();
+        };
     });
 
-    topicSelector.addEventListener("change", async (event) => {
-        const selectedTopicId = event.target.value;
-        contentArea.innerHTML = "";
-
-        if (selectedTopicId) {
-            const content = await getTopicContent(selectedTopicId);
-
-            const editorWrapper = document.createElement("div");
-            editorWrapper.className = "editor-wrapper";
-
-            const highlighter = document.createElement("div");
-            highlighter.id = "highlighter";
-
-            let lastTap = 0;
-
-            const handleDateNavigation = async (dateText) => {
-                console.log(
-                    `[تتبع] تم اكتشاف نقرة مزدوجة/نقر سريع على التاريخ: "${dateText}"`
-                );
-                try {
-                    const event = await findEventByDate(dateText);
-                    if (event) {
-                        console.log(
-                            `[تتبع] تم العثور على الحدث، جاري الانتقال إلى: index.html?eventId=${event.id}`
-                        );
-                        window.location.href = `index.html?eventId=${event.id}`;
-                    } else {
-                        alert(`لم يتم العثور على حدث مرتبط بالتاريخ: ${dateText}`);
-                    }
-                } catch (error) {
-                    console.error("Error navigating to event:", error);
-                    alert("حدث خطأ أثناء محاولة الانتقال للحدث.");
-                }
-            };
-
-            highlighter.addEventListener("dblclick", (e) => {
-                if (e.target.classList.contains("date-highlight")) {
-                    e.preventDefault();
-                    handleDateNavigation(e.target.textContent);
-                }
-            });
-
-            highlighter.addEventListener("click", (e) => {
-                if (e.target.classList.contains("date-highlight")) {
-                    const currentTime = new Date().getTime();
-                    const tapLength = currentTime - lastTap;
-                    if (tapLength < 300 && tapLength > 0) {
-                        e.preventDefault();
-                        handleDateNavigation(e.target.textContent);
-                    }
-                    lastTap = currentTime;
-                }
-            });
-
-            const textarea = document.createElement("textarea");
-            textarea.id = `topic-content-${selectedTopicId}`;
-            textarea.placeholder = "اكتب المحتوى الخاص بهذا الموضوع هنا...";
-            textarea.value = content;
-
-            const updateHighlight = () => {
-                const text = textarea.value;
-                // Improved Regex: Supports d-m-yyyy or d/m/yyyy, handles boundaries better
-                const dateRegex = /(?<!\d)(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})(?!\d)/g;
-                const highlightedText = text
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(dateRegex, '<span class="date-highlight">$1</span>');
-
-                highlighter.innerHTML = highlightedText + "\n";
-            };
-
-            textarea.addEventListener("input", (e) => {
-                updateHighlight();
-                clearTimeout(autoSaveTimer);
-                autoSaveTimer = setTimeout(() => {
-                    saveTopicContent(selectedTopicId, textarea.value);
-                }, 500);
-            });
-
-            textarea.addEventListener("scroll", () => {
-                highlighter.scrollTop = textarea.scrollTop;
-                highlighter.scrollLeft = textarea.scrollLeft;
-            });
-
-            // Removed manual pointer-events toggle. 
-            // Clicks on non-highlighted areas now naturally pass through the highlighter (pointer-events: none) 
-            // to the textarea (z-index: 1), while dates catch clicks (pointer-events: auto).
-
-            textarea.addEventListener("blur", () => { });
-            editorWrapper.addEventListener("focusout", updateHighlight);
-
-            editorWrapper.appendChild(highlighter);
-            editorWrapper.appendChild(textarea);
-            contentArea.appendChild(editorWrapper);
-            textarea.focus();
-            updateHighlight();
-        }
-    });
-
-    window.addEventListener("pagehide", () => {
-        const textarea = document.querySelector(".editor-wrapper textarea");
-        if (topicSelector.value) {
-            sessionStorage.setItem("selectedTopicId", topicSelector.value);
-            if (textarea)
-                sessionStorage.setItem("topicScrollTop", textarea.scrollTop);
-        }
-    });
-
+    // --- Page Bootstrapping ---
     async function initializePage() {
-        topicSelector.innerHTML =
-            '<option value="">-- اختر موضوعًا --</option>';
-
-        const topicsList = await getTopicsList(); // Fetch from DB
-
+        const topicsList = await getTopicsList();
+        topicSelector.innerHTML = '<option value="">-- اختر موضوعًا --</option>';
         if (topicsList) {
-            topicsList.forEach((topic) => {
+            topicsList.forEach(topic => {
                 const option = document.createElement("option");
                 option.value = topic.id;
                 option.textContent = topic.name;
                 topicSelector.appendChild(option);
             });
         }
-
-        await initializeEmptyData();
+        await initializeDefaultSettings();
 
         const savedTopicId = sessionStorage.getItem("selectedTopicId");
         if (savedTopicId) {
             topicSelector.value = savedTopicId;
             topicSelector.dispatchEvent(new Event("change"));
-
-            const savedScrollTop = sessionStorage.getItem("topicScrollTop");
-            if (savedScrollTop) {
-                setTimeout(() => {
-                    const textarea = document.querySelector(
-                        ".editor-wrapper textarea"
-                    );
-                    if (textarea) textarea.scrollTop = parseInt(savedScrollTop, 10);
-                }, 200);
-            }
         }
     }
 
-    async function initializeEmptyData() {
-        const db = await openDB();
-        const transaction = db.transaction(currentStoreName, "readonly");
-        const store = transaction.objectStore(currentStoreName);
-        const countRequest = store.count();
+    window.addEventListener("pagehide", () => {
+        if (topicSelector.value) sessionStorage.setItem("selectedTopicId", topicSelector.value);
+    });
 
-        return new Promise((resolve) => {
-            countRequest.onsuccess = async () => {
-                if (countRequest.result === 0) {
-                    const topicsList = await getTopicsList(); // Get list to seed empty content
-                    if (topicsList) {
-                        const initialData = topicsList.map((topic) => ({
-                            id: topic.id,
-                            content: "",
-                        }));
-                        await importData(initialData);
-                        console.log("تم تهيئة قاعدة بيانات الموضوعات ببيانات فارغة.");
-                    }
-                    resolve();
-                } else {
-                    resolve();
-                }
-            };
-        });
-    }
-
-    await initializeDefaultSettings();
     initializePage();
 });
