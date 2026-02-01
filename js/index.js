@@ -162,6 +162,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         return new Promise(async (resolve, reject) => {
             try {
                 const db = await openDB();
+                if (!db.objectStoreNames.contains(storeName)) {
+                    resolve([]);
+                    return;
+                }
                 const transaction = db.transaction(storeName, "readonly");
                 const store = transaction.objectStore(storeName);
                 const request = store.getAll();
@@ -179,6 +183,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                 reject(error);
             }
         });
+    }
+
+    async function fetchFromGist() {
+        try {
+            const gistId = await getSetting("gist_id");
+            if (!gistId) return;
+
+            console.log(`%c[مزامنة تلقائية] جاري الجلب من السحابة...`, "color: #7952b3;");
+            const response = await fetch(`https://api.github.com/gists/${gistId}`);
+            if (!response.ok) return;
+
+            const gistData = await response.json();
+            const file = gistData.files["111.json"];
+            if (!file) return;
+
+            const fileData = JSON.parse(file.content);
+            await saveDataToDB(fileData);
+            return true;
+        } catch (e) {
+            console.error("[خطأ مزامنة تلقائية]:", e);
+            return false;
+        }
     }
 
     // --- Event Listeners ---
@@ -233,8 +259,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             const gistId = await getSetting("gist_id");
 
             console.log("🔍 [فحص الإعدادات] جاري التأكد من وجود مفتاح الوصول والمعرف...");
-            if (!githubToken) console.warn("⚠️ [تنبيه] لم يتم العثور على GitHub Token. سيتم التحويل للتحميل المحلي.");
-            if (!gistId) console.warn("⚠️ [تنبيه] لم يتم العثور على Gist ID.");
 
             console.log("📂 [قاعدة البيانات] جاري استخراج السجلات من IndexedDB...");
             const dataFromDB = await readDataFromDB();
@@ -251,25 +275,31 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (githubToken && gistId) {
                 console.log("%c📡 [اتصال] جاري محاولة الرفع إلى GitHub API... يرجى الانتظار.", "color: #007bff;");
 
-                const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-                    method: "PATCH",
-                    headers: {
-                        "Authorization": `token ${githubToken}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        files: { "111.json": { content: jsonContent } }
-                    })
-                });
+                try {
+                    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+                        method: "PATCH",
+                        headers: {
+                            "Authorization": `token ${githubToken}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            files: { "111.json": { content: jsonContent } }
+                        })
+                    });
 
-                if (response.ok) {
-                    console.log("%c✅ [نجاح] تمت المزامنة بنجاح! السحابة الآن مطابقة لجهازك.", "color: #28a745; font-weight: bold; padding: 4px; border: 1px solid;");
-                    alert("✅ تم تحديث الملف على GitHub Gist بنجاح!");
-                    return;
-                } else {
-                    console.error(`❌ [فشل سحابي] رفض GitHub الطلب. كود الحالة: ${response.status}`);
-                    console.log("💡 [نصيحة للمطور] تأكد من أن الـ Token صحيح ولديه صلاحية (Gist Scope).");
+                    if (response.ok) {
+                        console.log("%c✅ [نجاح] تمت المزامنة بنجاح! السحابة الآن مطابقة لجهازك.", "color: #28a745; font-weight: bold; padding: 4px; border: 1px solid;");
+                        alert("✅ تم تحديث سجل الأحداث على GitHub Gist بنجاح!");
+                        return;
+                    } else {
+                        console.error(`❌ [فشل سحابي] رفض GitHub الطلب. كود الحالة: ${response.status}`);
+                        if (response.status === 401) alert("خطأ: مفتاح الوصول غير صحيح أو منتهي الصلاحية.");
+                    }
+                } catch (fetchErr) {
+                    console.error("📡 [خطأ اتصال] فشل الوصول لـ GitHub API:", fetchErr);
                 }
+            } else {
+                console.warn("⚠️ [تنبيه] الإعدادات ناقصة. سيتم التوجه للتحميل المحلي.");
             }
 
             console.log("💾 [إجراء احتياطي] جاري بدء التحميل المحلي للملف (111.json)...");
@@ -283,7 +313,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             console.log("🏁 [نهاية] تم تحميل الملف محلياً.");
-            alert("تم تحميل الملف محلياً (إما لفشل الرفع أو لعدم ضبط الإعدادات).");
+            alert("تم تحميل ملف النسخة الاحتياطية محلياً.");
         } catch (error) {
             console.error("⛔ [خطأ فادح] تعطلت عملية التصدير:", error);
             alert("فشل تصدير البيانات.");
@@ -485,8 +515,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 eventsData = dbData;
                 console.log(`[بيانات] تم العثور على ${eventsData.length} حدث.`);
             } else {
-                console.log("%c[تنبيه] قاعدة البيانات فارغة تماماً.", "color: #ffc107;");
-                descriptionDisplay.value = "لا توجد بيانات محلية. يرجى الضغط على زر 'تحميل من الويب' لمزامنة سجل الأحداث.";
+                console.log("%c[تنبيه] قاعدة البيانات فارغة تماماً. محاولة المزامنة التلقائية...", "color: #ffc107;");
+                descriptionDisplay.value = "جاري جلب البيانات من السحابة تلقائياً...";
+
+                const success = await fetchFromGist();
+                if (success) {
+                    eventsData = await readDataFromDB(true);
+                    console.log(`%c[نجاح] تم جلب ${eventsData.length} سجل من السحابة.`, "color: #28a745;");
+                } else {
+                    descriptionDisplay.value = "لا توجد بيانات محلية. يرجى التأكد من إعدادات GitHub أو الضغط على زر 'تحميل من الويب'.";
+                }
             }
 
             populateDropdown(eventsData);

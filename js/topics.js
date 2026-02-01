@@ -189,6 +189,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         }, 150);
     }
 
+    async function fetchTopicsFromGist() {
+        try {
+            const gistId = await getSetting("gist_id");
+            if (!gistId) return;
+
+            console.log(`%c[مزامنة تلقائية] جاري جلب المواضيع من السحابة...`, "color: #7952b3;");
+            const response = await fetch(`https://api.github.com/gists/${gistId}`);
+            if (!response.ok) return;
+
+            const gistData = await response.json();
+            const file = gistData.files["topics_data.json"];
+            if (!file) return;
+
+            const fileData = JSON.parse(file.content);
+            await importData(fileData);
+            return true;
+        } catch (e) {
+            console.error("[خطأ مزامنة تلقائية للموضوعات]:", e);
+            return false;
+        }
+    }
+
     // --- تفاعلات الواجهة ---
     topicSelector.addEventListener("change", async (e) => {
         const tid = e.target.value;
@@ -335,11 +357,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
         }
 
-        const saved = sessionStorage.getItem("selectedTopicId");
-        if (saved) {
-            topicSelector.value = saved;
-            topicSelector.dispatchEvent(new Event("change"));
-        }
+        // فحص هل توجد بيانات موضوعات في IndexedDB
+        const db = await openDB();
+        const tx = db.transaction(currentStoreName, "readonly");
+        const store = tx.objectStore(currentStoreName);
+        const countRequest = store.count();
+
+        countRequest.onsuccess = async () => {
+            if (countRequest.result === 0) {
+                console.log("%c[تنبيه] لا توجد بيانات موضوعات محلية. جاري المزامنة...", "color: #ffc107;");
+                const success = await fetchTopicsFromGist();
+                if (success && list && list.length > 0) {
+                    console.log("%c[نجاح] تمت المزامنة التلقائية للموضوعات.", "color: #28a745;");
+                }
+            } else {
+                const saved = sessionStorage.getItem("selectedTopicId");
+                if (saved) {
+                    topicSelector.value = saved;
+                    topicSelector.dispatchEvent(new Event("change"));
+                }
+            }
+        };
 
         window.addEventListener("pagehide", () => {
             if (topicSelector.value) sessionStorage.setItem("selectedTopicId", topicSelector.value);
