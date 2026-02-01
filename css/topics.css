@@ -1,71 +1,70 @@
-/* تنسيقات صفحة الموضوعات الاحترافية - النسخة المستقرة والمحسنة */
+/* تنسيقات صفحة الموضوعات الاحترافية - النسخة المتجاوبة بالكامل */
 
 #editor-container {
     margin-top: 15px;
     border: 1px solid #ccd0d5;
-    border-radius: 10px;
+    border-radius: 12px;
     background-color: #ffffff;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    /* ظل ناعم */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     position: relative;
     z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* تنسيق النص الإرشادي عندما يكون المحرر فارغاً */
 .CodeMirror-placeholder {
     color: #adb5bd !important;
     font-style: italic;
-    padding-right: 5px;
-    /* مسافة بسيطة من اليمين في RTL */
+    padding-right: 8px;
 }
 
-/* تنسيق محرر CodeMirror 5 */
+/* تنسيق محرر CodeMirror 5 ليكون متجاوباً */
 .CodeMirror {
-    height: 75vh;
-    font-size: 17px;
-    /* تكبير الخط قليلاً لراحة العين */
+    height: 65vh;
+    /* تقليل الطول قليلاً لضمان عدم خروج المحرر عن الشاشة في الهواتف */
+    min-height: 400px;
+    font-size: 16px;
     font-family: 'Segoe UI', Tahoma, sans-serif !important;
     background-color: #fff;
     color: #1c1e21 !important;
-    /* ضمان ظهور لون الخط */
 }
 
-/* تعديلات التمرير والمحاذاة */
-.CodeMirror-scroll {
-    min-height: 75vh;
-}
-
+/* حل مشكلة اختفاء السطر الأخير */
 .CodeMirror-lines {
-    padding: 15px 0;
-    /* مساحة علوية وسفلية مريحة */
+    padding-top: 15px !important;
+    padding-bottom: 200px !important;
+    /* مساحة كبيرة في الأسفل للسماح برفع السطر الأخير فوق حافة الشاشة */
+}
+
+/* تعديلات التجاوب مع الشاشات الصغيرة */
+@media screen and (max-width: 600px) {
+    .CodeMirror {
+        height: 55vh;
+        /* طول أصغر للهواتف */
+        font-size: 15px;
+    }
+
+    #topics-selector-wrapper {
+        padding: 12px;
+    }
 }
 
 /* تخصيص الروابط التفاعلية للتواريخ */
 .cm-date-link {
     color: #007bff !important;
-    background-color: rgba(0, 123, 255, 0.08) !important;
+    background-color: rgba(0, 123, 255, 0.1) !important;
     border-bottom: 2px solid #007bff !important;
     border-radius: 4px;
     font-weight: 600;
     padding: 0 4px;
     cursor: pointer;
-    transition: all 0.2s;
-}
-
-.cm-date-link:hover {
-    background-color: rgba(0, 123, 255, 0.15) !important;
-    text-decoration: underline;
-}
-
-/* تحسين الخطوط النشطة */
-.CodeMirror-activeline-background {
-    background: rgba(0, 123, 255, 0.03) !important;
 }
 
 /* شريط التمرير العصري */
 .CodeMirror-vscrollbar::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 .CodeMirror-vscrollbar::-webkit-scrollbar-track {
@@ -77,23 +76,22 @@
     border-radius: 10px;
 }
 
-.CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover {
-    background: #adb5bd;
-}
-
 /* القائمة العلوية */
 #topics-selector-wrapper {
     background: #ffffff;
-    padding: 20px;
+    padding: 15px;
     border-radius: 10px;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
     border: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 #topic-selector {
-    padding: 12px;
-    font-size: 1.1em;
+    padding: 10px;
+    font-size: 1em;
     border: 2px solid #007bff;
     border-radius: 8px;
-    color: #495057;
+    width: 100%;
 }

@@ -1,116 +1,126 @@
-/* تنسيقات خاصة بصفحة البحث */
+/* تنسيقات خاصة بصفحة البحث - مطورة */
 
 .filters {
     display: flex;
     gap: 15px;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    background: #f1f3f5;
+    padding: 15px;
+    border-radius: 12px;
 }
 
 .filter-group {
     flex: 1;
-    min-width: 200px;
+    min-width: 250px;
 }
 
 .search-bar {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 25px;
 }
 
-input[type="text"] {
+#search-input {
     flex-grow: 1;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ccd0d5;
-    font-size: 1em;
-    box-sizing: border-box;
-}
-
-select {
-    background-color: white;
-    /* تأكيد الخلفية البيضاء */
-}
-
-/* زر العودة (إذا تم استخدامه خارج الناف بار) */
-#back-to-main-btn {
-    background-color: #6c757d;
-}
-
-#back-to-main-btn:hover {
-    background-color: #5a6268;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 #results-container {
     flex-grow: 1;
-    background-color: #f8f9fa;
-    min-height: 200px;
-    /* ضمان ارتفاع أدنى */
-    border-radius: 6px;
+    background-color: #ffffff;
+    min-height: 300px;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 .result-item {
-    padding: 10px;
-    border-bottom: 1px solid #e9ecef;
+    padding: 20px;
+    border-bottom: 1px solid #f1f3f5;
+    transition: background-color 0.2s;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.result-item:last-child {
-    border-bottom: none;
+.result-item:hover {
+    background-color: #f8f9fa;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.result-item .date {
+    font-weight: 700;
+    color: #007bff;
+    font-size: 1.1rem;
 }
 
 .go-to-event-btn {
     background-color: #17a2b8;
-    padding: 5px 10px;
-    font-size: 0.9em;
-    flex-shrink: 0;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 20px;
 }
 
-.go-to-event-btn:hover {
-    background-color: #138496;
+.result-item .description {
+    font-size: 1rem;
+    color: #495057;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    background: #fff;
+    padding: 10px;
+    border-right: 4px solid #dee2e6;
 }
 
 .result-meta {
     display: flex;
-    gap: 20px;
-    font-size: 0.9em;
-    color: #606770;
-    width: 100%;
-    margin-top: 8px;
+    flex-wrap: wrap;
+    gap: 15px;
+    font-size: 0.9rem;
+    color: #6c757d;
 }
 
 .result-meta span {
-    font-weight: bold;
-    color: #444950;
+    background: #e9ecef;
+    padding: 2px 10px;
+    border-radius: 12px;
+    color: #495057;
+    font-weight: 600;
 }
 
 #results-info {
-    margin-bottom: 10px;
-    font-weight: bold;
+    margin-bottom: 15px;
+    font-weight: 600;
     color: #0056b3;
-    padding: 5px;
+    padding: 10px;
     background-color: #e7f3ff;
-    border-radius: 4px;
+    border-radius: 8px;
     text-align: center;
-    display: none;
-}
-
-.result-item .date {
-    font-weight: bold;
-    color: #0056b3;
-}
-
-.result-item .description {
-    margin-top: 5px;
-    white-space: pre-wrap;
-    flex-basis: 100%;
 }
 
 mark {
-    background-color: #ffeb3b;
+    background-color: #fff9c4;
+    color: #856404;
     padding: 0 2px;
+    border-bottom: 2px solid #ffeb3b;
+}
+
+/* تحسين للجوال */
+@media (max-width: 600px) {
+    .result-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .go-to-event-btn {
+        width: 100%;
+        text-align: center;
+    }
 }

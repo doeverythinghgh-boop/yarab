@@ -48,22 +48,23 @@
     <div id="search-filters-area" class="filters">
       <div id="filter-group-tag" class="filter-group">
         <label id="tag-filter-label" for="tag-filter">فلترة حسب قوة الملف:</label>
-        <select id="tag-filter">
-          <option value="">الكل</option>
+        <select id="tag-filter" name="tag-filter">
+          <option id="tag-filter-option-all" value="">الكل</option>
         </select>
       </div>
       <div id="filter-group-condemnation" class="filter-group">
         <label id="condemnation-filter-label" for="condemnation-filter">فلترة حسب الإدانة:</label>
-        <select id="condemnation-filter">
-          <option value="">الكل</option>
+        <select id="condemnation-filter" name="condemnation-filter">
+          <option id="condemnation-filter-option-all" value="">الكل</option>
         </select>
       </div>
     </div>
 
     <div id="search-bar-area" class="search-bar">
-      <input type="text" id="search-input" placeholder="ابحث في الوصف، التاريخ، أو أي تفاصيل أخرى..." />
+      <input type="text" id="search-input" name="search-input"
+        placeholder="ابحث في الوصف، التاريخ، أو أي تفاصيل أخرى..." />
       <button id="search-btn" class="button icon-btn" title="بحث">
-        <svg viewBox="0 0 24 24">
+        <svg id="svg-search-icon" viewBox="0 0 24 24">
           <path
             d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
         </svg>

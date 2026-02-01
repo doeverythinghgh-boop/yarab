@@ -1,22 +1,23 @@
-/* تنسيقات عامة ومشتركة لجميع الصفحات */
+/* تنسيقات عامة ومشتركة لجميع الصفحات - نسخة مطورة ومتجاوبة بالكامل */
 body {
   font-family: "Tahoma", "Segoe UI", sans-serif;
-  background-color: #f0f2f5;
+  background-color: #f8f9fa;
   color: #1c1e21;
   margin: 0;
-  padding-top: 60px;
-  /* لإعطاء مساحة لشريط التنقل الثابت */
+  padding-top: 70px;
+  /* مساحة لشريط التنقل */
+  line-height: 1.6;
 }
 
 .container {
   background-color: #ffffff;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 20px rgba(0, 0, 0, 0.05);
   width: 95%;
   max-width: 1200px;
-  min-height: calc(100vh - 80px);
-  margin: 0 auto 20px;
+  min-height: calc(100vh - 100px);
+  margin: 0 auto 30px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -25,38 +26,41 @@ body {
 h1 {
   text-align: center;
   color: #0056b3;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #dee2e6;
-  padding-bottom: 10px;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #f1f3f5;
+  padding-bottom: 15px;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
 }
 
 label {
-  font-weight: bold;
-  font-size: 1.1em;
-  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 1.05em;
+  margin-bottom: 10px;
   display: block;
+  color: #495057;
 }
 
-/* عناصر الإدخال العامة */
+/* عناصر الإدخال العامة المتجاوبة */
 select,
 textarea,
 input[type="text"],
 input[type="date"] {
   width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccd0d5;
-  font-size: 1em;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  font-size: 1rem;
   box-sizing: border-box;
-  transition: border-color 0.2s;
-  background-color: #ffffff;
+  transition: all 0.2s ease;
+  background-color: #fff;
 }
 
 select:focus,
 textarea:focus,
 input[type="text"]:focus,
 input[type="date"]:focus {
-  border-color: #0056b3;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
   outline: none;
 }
 
@@ -64,162 +68,114 @@ input[type="date"]:focus {
 .button-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 25px;
+  justify-content: center;
 }
 
 .button {
-  padding: 10px 15px;
-  font-size: 1em;
-  font-weight: bold;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
   color: white;
-  background-color: #0056b3;
+  background-color: #007bff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
   text-decoration: none;
-  /* للروابط التي تشبه الأزرار */
-  display: inline-block;
-  /* للروابط */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .button:hover {
-  background-color: #004494;
+  background-color: #0056b3;
+  transform: translateY(-1px);
 }
 
 .icon-btn {
-  display: inline-flex !important;
   flex-direction: column;
-  /* ترتيب رأسي */
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  /* زيادة العرض قليلاً لاستيعاب النص */
-  height: 65px;
-  /* زيادة الطول قليلاً */
-  padding: 5px !important;
-  border-radius: 12px !important;
-  position: relative;
-  gap: 4px;
+  min-width: 70px;
+  height: 75px;
+  padding: 8px !important;
 }
 
 .icon-btn svg {
-  width: 22px;
-  /* تقليل حجم الأيقونة قليلاً */
-  height: 22px;
-  fill: white;
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
 }
 
 .btn-text {
-  font-size: 10px;
-  /* خط صغير جداً */
-  color: white;
-  font-weight: normal;
-  text-align: center;
-  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
 }
 
-/* Tooltip for icon buttons */
-.icon-btn::after {
-  display: none;
-  /* إيقاف التلميح القديم لأنه سيظهر نص أسفل الأيقونة */
-}
-
-.icon-btn.small {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px !important;
-}
-
-.icon-btn.small svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* شريط التنقل العلوي */
+/* شريط التنقل العلوي المتجاوب */
 .top-nav {
-  background-color: rgba(52, 58, 64, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 8px 0;
-  text-align: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  padding: 10px 0;
   position: fixed;
   top: 0;
   right: 0;
   left: 0;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 15px;
+  gap: 20px;
 }
 
 .nav-button {
-  width: 45px;
-  height: 45px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  background: transparent;
+  background: #f1f3f5;
+  color: #495057;
+  text-decoration: none;
 }
 
 .nav-button svg {
   width: 24px;
   height: 24px;
-  fill: #adb5bd;
-  transition: fill 0.3s;
+  fill: currentColor;
 }
 
 .nav-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-}
-
-.nav-button:hover svg {
-  fill: #ffffff;
+  background-color: #e9ecef;
+  transform: scale(1.05);
+  color: #212529;
 }
 
 .nav-button.active {
   background-color: #007bff;
-  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
-.nav-button.active svg {
-  fill: #ffffff;
-}
+/* التجاوب مع الجوال */
+@media screen and (max-width: 600px) {
+  body {
+    padding-top: 60px;
+  }
 
-/* Tooltip (إظهار اسم الصفحة عند الحوم بالماوس) */
-.nav-button::after {
-  content: attr(title);
-  position: absolute;
-  top: 55px;
-  background: #333;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 1001;
-}
+  .container {
+    width: 98%;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
 
-.nav-button:hover::after {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* التجاوب مع مختلف الشاشات */
-@media screen and (max-width: 480px) {
   .top-nav {
-    gap: 8px;
-    padding: 10px 0;
+    gap: 10px;
+    padding: 8px 0;
   }
 
   .nav-button {
@@ -231,15 +187,41 @@ input[type="date"]:focus {
     width: 20px;
     height: 20px;
   }
+
+  .button-group {
+    gap: 8px;
+  }
+
+  .icon-btn {
+    min-width: 60px;
+    height: 65px;
+  }
 }
 
-/* رسالة حالة الحفظ */
+/* إخفاء شريط التمرير ولكن الحفاظ على الوظيفة */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #adb5bd;
+}
+
 #save-status {
   text-align: center;
   color: #28a745;
-  font-weight: bold;
-  margin-top: -15px;
-  margin-bottom: 10px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  height: 20px;
   opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.3s;
 }

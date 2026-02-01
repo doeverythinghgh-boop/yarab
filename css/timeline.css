@@ -1,4 +1,4 @@
-/* Timeline Styles */
+/* الخط الزمني للأحداث - نسخة متطورة */
 .timeline-container {
     position: relative;
     max-width: 1000px;
@@ -6,185 +6,162 @@
     padding: 20px 0;
 }
 
-/* The vertical line */
+/* الخط الرأسي المركزي */
 .timeline-container::after {
     content: '';
     position: absolute;
-    width: 4px;
-    background-color: #007bff;
+    width: 3px;
+    background: linear-gradient(to bottom, transparent, #007bff, transparent);
     top: 0;
     bottom: 0;
     left: 50%;
-    margin-left: -2px;
+    margin-left: -1.5px;
     border-radius: 2px;
-    opacity: 0.3;
 }
 
-/* Container around content */
 .timeline-item {
-    padding: 10px 40px;
+    padding: 15px 40px;
     position: relative;
-    background-color: inherit;
     width: 50%;
     box-sizing: border-box;
-    animation: fadeIn 0.5s ease-in-out;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease-out;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* فئة لإظهار العناصر عند التمرير (إذا تم استخدام JS لاحقاً) أو كقيمة افتراضية */
+.timeline-item.show {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-/* The circles on the timeline */
+/* الدوائر التوضيحية */
 .timeline-item::after {
     content: '';
     position: absolute;
-    width: 20px;
-    height: 20px;
-    right: -10px;
-    background-color: white;
-    border: 4px solid #007bff;
+    width: 16px;
+    height: 16px;
+    background-color: #ffffff;
+    border: 3px solid #007bff;
     top: 25px;
     border-radius: 50%;
-    z-index: 1;
+    z-index: 2;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
 }
 
-/* Place the container to the left */
-.left {
-    left: 0;
-}
-
-/* Place the container to the right */
-.right {
-    left: 50%;
-}
-
-/* Fix the circle for containers on the right side */
-.right::after {
-    left: -10px;
-}
-
-/* Fix the circle for containers on the left side */
-.left::after {
-    right: -10px;
-    /* In RTL, left item is actually on the right visually if strict LTR logic, but let's adjust for RTL */
-}
-
-/* RTL Adjustment: 
-   In RTL:
-   "Left" items should be on the Right side of the screen.
-   "Right" items should be on the Left side.
-*/
-
+/* ترتيب العناصر في بيئة RTL */
 .left {
     right: 0;
     left: auto;
+    text-align: right;
 }
 
 .right {
     right: 50%;
     left: auto;
+    text-align: right;
 }
 
 .left::after {
-    left: -10px;
+    left: -8px;
     right: auto;
 }
 
 .right::after {
-    right: -10px;
+    right: -8px;
     left: auto;
 }
 
-
-/* Content Card */
+/* بطاقة المحتوى */
 .content {
-    padding: 20px;
-    background-color: white;
-    position: relative;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border: 1px solid #eee;
-    transition: transform 0.2s;
+    padding: 24px;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f3f5;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    position: relative;
 }
 
 .content:hover {
-    transform: scale(1.02);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     border-color: #007bff;
 }
 
 .timeline-date {
-    font-weight: bold;
+    font-weight: 800;
     color: #007bff;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     display: block;
-    font-size: 0.9em;
+    font-size: 1.1rem;
 }
 
 .timeline-desc {
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #333;
-    max-height: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #495057;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .timeline-meta {
-    margin-top: 10px;
-    font-size: 0.8em;
-    color: #666;
+    margin-top: 15px;
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .tag-badge {
-    background: #eee;
-    padding: 2px 8px;
-    border-radius: 10px;
+    background: #e7f3ff;
+    color: #007bff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
 }
 
-/* Media queries - Responsive timeline on smaller screens */
-@media screen and (max-width: 768px) {
+.condemnation-badge {
+    background: #fff0f0;
+    color: #dc3545;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
 
-    /* Place the timelime to the left */
+/* التجاوب مع الجوال */
+@media screen and (max-width: 768px) {
     .timeline-container::after {
-        right: 31px;
-        /* Move line to right side in RTL */
+        right: 20px;
         left: auto;
     }
 
-    /* Full-width containers */
     .timeline-item {
         width: 100%;
-        padding-right: 70px;
-        padding-left: 20px;
+        padding-right: 45px;
+        padding-left: 0;
+        margin-bottom: 25px;
     }
 
-    /* Make sure all circles are at the same spot */
     .timeline-item::after {
-        right: 21px;
-        /* Adjust circle position */
+        right: 12px;
         left: auto;
     }
 
-    /* Make all right containers behave like the left ones */
+    .left,
     .right {
-        right: 0%;
+        right: 0;
     }
+}
 
-    .left {
-        right: 0%;
-    }
+.loading-text {
+    text-align: center;
+    padding: 50px;
+    color: #6c757d;
+    font-size: 1.2rem;
 }

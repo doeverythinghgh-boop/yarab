@@ -103,20 +103,21 @@
         <div id="meta-row-1" class="meta-row">
           <div id="meta-field-tag" class="meta-field">
             <label id="tag-selector-label" for="tag-selector">قوه الملف:</label>
-            <select id="tag-selector">
-              <option value="">-- اختر --</option>
+            <select id="tag-selector" name="tag-selector">
+              <option id="tag-option-default" value="">-- اختر --</option>
             </select>
           </div>
           <div id="meta-field-condemnation" class="meta-field">
             <label id="condemnation-selector-label" for="condemnation-selector">ادانه:</label>
-            <select id="condemnation-selector">
-              <option value="">-- اختر --</option>
+            <select id="condemnation-selector" name="condemnation-selector">
+              <option id="condemnation-option-default" value="">-- اختر --</option>
             </select>
           </div>
         </div>
         <div id="condemnation-details-wrapper" style="display: none; margin-bottom: 10px">
           <label id="condemnation-desc-label" for="condemnation-description">وصف الإدانة:</label>
-          <textarea id="condemnation-description" rows="3" placeholder="أدخل تفاصيل الإدانة هنا..."></textarea>
+          <textarea id="condemnation-description" name="condemnation-description" rows="3"
+            placeholder="أدخل تفاصيل الإدانة هنا..."></textarea>
         </div>
         <div id="meta-row-links" class="meta-row">
           <div id="meta-field-links" class="meta-field" style="flex-grow: 2">
@@ -126,7 +127,7 @@
             </div>
             <button type="button" id="add-link-btn" class="button icon-btn small" title="إضافة رابط"
               style="margin-top: 10px;">
-              <svg viewBox="0 0 24 24">
+              <svg id="svg-add-link-icon" viewBox="0 0 24 24">
                 <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
               </svg>
             </button>
