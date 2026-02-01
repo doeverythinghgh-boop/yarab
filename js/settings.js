@@ -90,10 +90,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function addItem(key, value) {
-        const db = await openDB();
-        const tx = db.transaction(settingsStoreName, "readwrite");
-        const store = tx.objectStore(settingsStoreName);
-
+        // Fetch current items FIRST before starting a new transaction
         let items = await getSetting(key);
         if (!items) items = [];
 
@@ -111,11 +108,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         items.push(value);
+
+        const db = await openDB();
+        const tx = db.transaction(settingsStoreName, "readwrite");
+        const store = tx.objectStore(settingsStoreName);
+
         store.put({ key: key, value: items });
 
         tx.oncomplete = () => {
             renderAll();
             showSaveStatus();
+        };
+
+        tx.onerror = (e) => {
+            console.error("Transaction error:", e);
         };
     }
 

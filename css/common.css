@@ -90,50 +90,45 @@ input[type="date"]:focus {
 
 .icon-btn {
   display: inline-flex !important;
+  flex-direction: column;
+  /* ترتيب رأسي */
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  padding: 0 !important;
+  width: 60px;
+  /* زيادة العرض قليلاً لاستيعاب النص */
+  height: 65px;
+  /* زيادة الطول قليلاً */
+  padding: 5px !important;
   border-radius: 12px !important;
   position: relative;
+  gap: 4px;
 }
 
 .icon-btn svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  /* تقليل حجم الأيقونة قليلاً */
+  height: 22px;
   fill: white;
+}
+
+.btn-text {
+  font-size: 10px;
+  /* خط صغير جداً */
+  color: white;
+  font-weight: normal;
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* Tooltip for icon buttons */
 .icon-btn::after {
-  content: attr(title);
-  position: absolute;
-  top: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: white;
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 100;
-}
-
-.icon-btn:hover::after {
-  opacity: 1;
-  visibility: visible;
-  top: -45px;
+  display: none;
+  /* إيقاف التلميح القديم لأنه سيظهر نص أسفل الأيقونة */
 }
 
 .icon-btn.small {
-  width: 35px;
-  height: 35px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px !important;
 }
 

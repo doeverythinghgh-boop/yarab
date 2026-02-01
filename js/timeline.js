@@ -31,9 +31,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
 
-            // Sort by date descending (newest first)
+            // Sort by date ascending (oldest first)
             events.sort((a, b) => {
-                return formatDate(b.date) - formatDate(a.date);
+                return formatDate(a.date) - formatDate(b.date);
             });
 
             timelineContainer.innerHTML = "";
