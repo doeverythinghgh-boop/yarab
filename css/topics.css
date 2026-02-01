@@ -47,21 +47,26 @@ textarea {
     z-index: 1;
     background-color: transparent;
     color: #1c1e21;
-    /* لون نص واضح للكتابة */
-    pointer-events: none;
-    /* السماح للنقرات بالمرور إلى الطبقة السفلية بشكل افتراضي */
+    position: relative;
+    /* لضمان عمل z-index */
 }
 
 .editor-wrapper>#highlighter {
-    z-index: 0;
+    z-index: 2;
+    background-color: transparent;
+    pointer-events: none;
+    /* يسمح للنقرات بالمرور للتكست أريا */
     color: transparent;
-    /* النص الأساسي يكون شفافًا */
 }
 
 .editor-wrapper #highlighter .date-highlight {
-    background-color: #fffbdd;
-    /* لون تمييز التاريخ - أصفر فاتح */
-    color: inherit;
-    /* استخدام لون النص الأصلي */
-    border-radius: 3px;
+    background-color: rgba(255, 251, 221, 0.5);
+    /* تظليل شبه شفاف */
+    color: transparent;
+    border-bottom: 2px solid #ffc107;
+    /* إضافة خط تحت التاريخ لتمييزه */
+    border-radius: 2px;
+    pointer-events: auto;
+    /* يجعل التاريخ قابلاً للنقر */
+    cursor: pointer;
 }

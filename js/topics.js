@@ -81,7 +81,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const normalizeDate = (ds) => {
             if (!ds) return "";
-            const parts = ds.split("-");
+            // Replace / with - to normalize
+            const cleanDs = ds.replace(/\//g, "-");
+            const parts = cleanDs.split("-");
             if (parts.length !== 3) return ds;
             const day = parseInt(parts[0], 10);
             const month = parseInt(parts[1], 10);
@@ -250,7 +252,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const updateHighlight = () => {
                 const text = textarea.value;
-                const dateRegex = /\b(\d{1,2}-\d{1,2}-\d{4})(?!\d)/g;
+                // Improved Regex: Supports d-m-yyyy or d/m/yyyy, handles boundaries better
+                const dateRegex = /(?<!\d)(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})(?!\d)/g;
                 const highlightedText = text
                     .replace(/&/g, "&amp;")
                     .replace(/</g, "&lt;")
@@ -273,12 +276,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 highlighter.scrollLeft = textarea.scrollLeft;
             });
 
-            editorWrapper.addEventListener("click", () => {
-                if (textarea.style.pointerEvents !== "auto") {
-                    textarea.style.pointerEvents = "auto";
-                }
-                textarea.focus();
-            });
+            // Removed manual pointer-events toggle. 
+            // Clicks on non-highlighted areas now naturally pass through the highlighter (pointer-events: none) 
+            // to the textarea (z-index: 1), while dates catch clicks (pointer-events: auto).
 
             textarea.addEventListener("blur", () => { });
             editorWrapper.addEventListener("focusout", updateHighlight);
