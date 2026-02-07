@@ -103,8 +103,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <span class="timeline-date">${event.date}</span>
                         <div class="timeline-desc">${event.description || "لا يوجد وصف"}</div>
                         <div class="timeline-meta">
-                            ${event.tag ? `<span class="tag-badge">${event.tag}</span>` : ""}
-                            ${event.condemnation ? `<span class="condemnation-badge">${event.condemnation}</span>` : ""}
+                            ${event.tag ? `<span class="tag-badge">قوة الملف: ${event.tag}</span>` : ""}
+                            ${event.condemnation ? `<span class="condemnation-badge">إدانة: ${event.condemnation}</span>` : ""}
                         </div>
                     </div>
                 `;
